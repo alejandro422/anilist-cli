@@ -1,0 +1,40 @@
+(library
+ (name anilist)
+ (public_name anilist)
+ (modules
+  cliArgument
+  commandLineInvocationBranch
+  commandLineInvocationParser
+  commandLineInvocationShared
+  commandLineInvocationState
+  commandLineInvocationTypes
+  commandLineInvocationValidation
+  commandLineInvocation
+  graphQlDirective
+  graphQlField
+  graphQlFragmentDefinition
+  graphQlOperation
+  graphQlSelection
+  graphQlTransport
+  graphQlName
+  graphQlQuery
+  loweringEngine
+  requestOptions
+  schemaArgumentParser
+  schemaCommand
+  schemaCommandTypes
+  schemaQueries
+  selectionSet)
+ (private_modules
+  commandLineInvocationBranch
+  commandLineInvocationParser
+  commandLineInvocationShared
+  commandLineInvocationState
+  commandLineInvocationTypes
+  commandLineInvocationValidation
+  schemaArgumentParser
+  schemaCommandTypes
+  schemaQueries)
+ (libraries cohttp-lwt-unix lwt uri yojson)
+ (flags
+  (:standard -warn-error +a)))

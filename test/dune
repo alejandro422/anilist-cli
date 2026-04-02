@@ -1,0 +1,6 @@
+(test
+ (name loweringEngineTest)
+ (modules loweringEngineTest)
+ (libraries anilist)
+ (flags
+  (:standard -warn-error +a)))
