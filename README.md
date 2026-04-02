@@ -51,6 +51,28 @@ Run a query:
 docker run --rm fuwn/anilist media --id 1 --selection-set id,title.romaji,format,status
 ```
 
+## Shell Script Savings
+
+In a shell script, the usual GraphQL flow means carrying an endpoint, a JSON payload, and a quoted query string:
+
+```bash
+endpoint='https://graphql.anilist.co'
+
+curl \
+  --silent \
+  --header 'Content-Type: application/json' \
+  --data '{"query":"query { Media(id: 1) { id title { romaji } format status } }"}' \
+  "$endpoint"
+```
+
+With `anilist`, the same request becomes the command itself:
+
+```bash
+anilist media --id 1 --selection-set id,title.romaji,format,status
+```
+
+That removes the JSON wrapper, the embedded GraphQL string, and most of the shell quoting friction while keeping the JSON response unchanged.
+
 ## Usage
 
 Get an anime:
