@@ -117,7 +117,7 @@ let rec parseRemainingArguments parserState = function
           in
           let updatedParserState =
             match
-              CommandLineInvocationState.currentSelectionBranchOfState
+              CommandLineInvocationBranch.currentSelectionBranchOfState
                 parserState
             with
             | Some selectionBranchBuilder ->
@@ -224,7 +224,7 @@ let rec parseRemainingArguments parserState = function
           in
           let updatedParserState =
             match
-              CommandLineInvocationState.currentSelectionBranchOfState
+              CommandLineInvocationBranch.currentSelectionBranchOfState
                 parserState
             with
             | Some selectionBranchBuilder ->
@@ -245,7 +245,7 @@ let rec parseRemainingArguments parserState = function
           in
           let updatedParserState =
             match
-              CommandLineInvocationState.currentSelectionBranchOfState
+              CommandLineInvocationBranch.currentSelectionBranchOfState
                 parserState
             with
             | Some selectionBranchBuilder ->
@@ -288,7 +288,7 @@ let rec parseRemainingArguments parserState = function
           in
           let updatedParserState =
             match
-              CommandLineInvocationState.currentSelectionBranchOfState
+              CommandLineInvocationBranch.currentSelectionBranchOfState
                 parserState
             with
             | Some selectionBranchBuilder ->
@@ -309,10 +309,10 @@ let rec parseRemainingArguments parserState = function
           parseRemainingArguments updatedParserState remainingTokensAfterOption)
   | token :: remainingTokens -> (
       match
-        CommandLineInvocationState.currentSelectionBranchOfState parserState
+        CommandLineInvocationBranch.currentSelectionBranchOfState parserState
       with
       | Some selectionBranchBuilder
-        when CommandLineInvocationState.currentDefaultSelectionPathPrefix
+        when CommandLineInvocationBranch.currentDefaultSelectionPathPrefix
                parserState
              = []
              && selectionBranchBuilder.builderSelectionExpressions <> [] ->

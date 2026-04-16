@@ -8,8 +8,6 @@ val finalizedCurrentOperationDefinition : parserState -> parserState
 val withUpdatedCurrentSelectionBranch :
   parserState -> selectionBranchBuilder -> parserState
 
-val currentSelectionBranchOfState : parserState -> selectionBranchBuilder option
-val currentDefaultSelectionPathPrefix : parserState -> selectionPathSegment list
 val withAddedRootSelectionExpression : parserState -> string -> parserState
 val withAddedCurrentTargetDirective : parserState -> string -> parserState
 

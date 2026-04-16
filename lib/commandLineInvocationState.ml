@@ -61,27 +61,6 @@ let finalizedStructuredFragmentDefinitionOfBuilder fragmentDefinitionBuilder =
       finalizedSelectionTarget.builderSelectionBranches;
   }
 
-let currentSelectionBranchOfState parserState =
-  match parserState.currentStructuredFragmentDefinition with
-  | Some fragmentDefinitionBuilder ->
-      fragmentDefinitionBuilder.builderFragmentSelectionTarget
-        .builderCurrentSelectionBranch
-  | None -> (
-      match parserState.currentOperationDefinition with
-      | Some operationDefinitionBuilder ->
-          operationDefinitionBuilder.builderOperationSelectionTarget
-            .builderCurrentSelectionBranch
-      | None -> None)
-
-let currentDefaultSelectionPathPrefix parserState =
-  match parserState.currentStructuredFragmentDefinition with
-  | Some _ -> []
-  | None -> (
-      match parserState.currentOperationDefinition with
-      | Some operationDefinitionBuilder ->
-          operationDefinitionBuilder.builderDefaultSelectionPathPrefix
-      | None -> [])
-
 let finalizedCurrentSelectionBranch parserState =
   match parserState.currentStructuredFragmentDefinition with
   | Some fragmentDefinitionBuilder ->

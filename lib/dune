@@ -11,7 +11,6 @@
   commandLineInvocationValidation
   commandLineInvocation
   graphQlDirective
-  graphQlField
   graphQlFragmentDefinition
   graphQlOperation
   graphQlSelection

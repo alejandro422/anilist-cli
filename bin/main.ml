@@ -6,21 +6,6 @@ let printAndExit channel exitCode message =
   flush channel;
   exit exitCode
 
-let executeQuery ~headers ~operationName ~variables ~query =
-  let endpoint = Anilist.GraphQlTransport.endpointOfEnvironment () in
-  Anilist.GraphQlTransport.executeQuery ~operationName ~variables ~headers
-    ~endpoint ~query
-  >>= fun (statusCode, responseBody) ->
-  let printableResponse =
-    Anilist.GraphQlTransport.prettyPrintedJsonOrOriginal responseBody
-  in
-  if statusCode >= 200 && statusCode < 300 then (
-    print_endline printableResponse;
-    Lwt.return 0)
-  else (
-    prerr_endline printableResponse;
-    Lwt.return 1)
-
 let printResponse statusCode responseBody =
   let printableResponse =
     Anilist.GraphQlTransport.prettyPrintedJsonOrOriginal responseBody
@@ -31,6 +16,12 @@ let printResponse statusCode responseBody =
   else (
     prerr_endline printableResponse;
     Lwt.return 1)
+
+let executeQuery ~headers ~operationName ~variables ~query =
+  let endpoint = Anilist.GraphQlTransport.endpointOfEnvironment () in
+  Anilist.GraphQlTransport.executeQuery ~operationName ~variables ~headers
+    ~endpoint ~query
+  >>= fun (statusCode, responseBody) -> printResponse statusCode responseBody
 
 let runProtected task =
   Lwt.catch task (fun exceptionValue ->
