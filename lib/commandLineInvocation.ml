@@ -1,8 +1,0 @@
-include CommandLineInvocationTypes
-
-let usageText = CommandLineInvocationShared.usageText
-
-let helpRequestedOfArguments =
-  CommandLineInvocationShared.helpRequestedOfArguments
-
-let invocationOfArguments = CommandLineInvocationParser.invocationOfArguments

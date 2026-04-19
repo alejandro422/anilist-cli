@@ -391,22 +391,22 @@ let testMultipleOperationDocumentLowering () =
 
 let testSelectionSetCompatibilityAliasParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [ "user"; "--name"; "fuwn"; "--fields"; "id" ]
   with
   | Ok invocation ->
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       assertEqual "1"
         (string_of_int
            (List.length
-              operationDefinition.CommandLineInvocation.selectionBranches))
+              operationDefinition.CommandLineInvocationTypes.selectionBranches))
   | Error message -> failwith message
 
 let testOperationParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "--operation-name";
@@ -433,31 +433,31 @@ let testOperationParsing () =
   with
   | Ok invocation ->
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       assertEqual "Viewer"
-        (Option.get operationDefinition.CommandLineInvocation.operationName);
+        (Option.get operationDefinition.CommandLineInvocationTypes.operationName);
       assertEqual "1"
         (string_of_int
            (List.length
-              operationDefinition.CommandLineInvocation.variableDefinitions));
+              operationDefinition.CommandLineInvocationTypes.variableDefinitions));
       assertEqual "1"
         (string_of_int
            (List.length
-              operationDefinition.CommandLineInvocation.variableAssignments));
+              operationDefinition.CommandLineInvocationTypes.variableAssignments));
       assertEqual "1"
         (string_of_int
            (List.length
-              operationDefinition.CommandLineInvocation.selectionBranches));
+              operationDefinition.CommandLineInvocationTypes.selectionBranches));
       assertEqual "1"
         (string_of_int
            (List.length
-              invocation.CommandLineInvocation.structuredFragmentDefinitions))
+              invocation.CommandLineInvocationTypes.structuredFragmentDefinitions))
   | Error message -> failwith message
 
 let testVariableAssignmentsPreserveGraphQlVariableNames () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "--variable-definition";
@@ -474,17 +474,17 @@ let testVariableAssignmentsPreserveGraphQlVariableNames () =
   with
   | Ok invocation ->
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       assertEqual "user_name"
         (fst
            (List.hd
-              operationDefinition.CommandLineInvocation.variableAssignments))
+              operationDefinition.CommandLineInvocationTypes.variableAssignments))
   | Error message -> failwith message
 
 let testVariableAssignmentsRejectVariableReferences () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "--variable";
@@ -518,7 +518,7 @@ let testInlineFragmentsRequireSelections () =
 
 let testRelativeAndAbsoluteFieldPathParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "user";
         "--name";
@@ -539,33 +539,33 @@ let testRelativeAndAbsoluteFieldPathParsing () =
   with
   | Ok invocation -> (
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let secondSelectionBranch =
-        operationDefinition.CommandLineInvocation.selectionBranches |> List.tl
+        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.tl
         |> List.hd
       in
       let thirdSelectionBranch =
-        operationDefinition.CommandLineInvocation.selectionBranches |> List.rev
+        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
         |> List.hd
       in
       assertEqual "2"
         (string_of_int
            (List.length
-              secondSelectionBranch.CommandLineInvocation.selectionPathSegments));
+              secondSelectionBranch.CommandLineInvocationTypes.selectionPathSegments));
       match
-        List.hd thirdSelectionBranch.CommandLineInvocation.selectionPathSegments
+        List.hd thirdSelectionBranch.CommandLineInvocationTypes.selectionPathSegments
       with
-      | CommandLineInvocation.FieldSegment fieldSegment ->
-          assertEqual "media" fieldSegment.CommandLineInvocation.fieldName
-      | CommandLineInvocation.InlineFragmentSegment _
-      | CommandLineInvocation.FragmentSpreadSegment _ ->
+      | CommandLineInvocationTypes.FieldSegment fieldSegment ->
+          assertEqual "media" fieldSegment.CommandLineInvocationTypes.fieldName
+      | CommandLineInvocationTypes.InlineFragmentSegment _
+      | CommandLineInvocationTypes.FragmentSpreadSegment _ ->
           failwith "Expected field segment")
   | Error message -> failwith message
 
 let testExplicitOperationBarePositionalSiblingFields () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "user";
@@ -578,17 +578,17 @@ let testExplicitOperationBarePositionalSiblingFields () =
   with
   | Ok invocation ->
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       assertEqual "2"
         (string_of_int
            (List.length
-              operationDefinition.CommandLineInvocation.selectionBranches))
+              operationDefinition.CommandLineInvocationTypes.selectionBranches))
   | Error message -> failwith message
 
 let testInlineFragmentParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "--field";
@@ -605,21 +605,21 @@ let testInlineFragmentParsing () =
   with
   | Ok invocation ->
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let inlineFragmentBranch =
-        operationDefinition.CommandLineInvocation.selectionBranches |> List.rev
+        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
         |> List.hd
       in
       assertEqual "2"
         (string_of_int
            (List.length
-              inlineFragmentBranch.CommandLineInvocation.selectionPathSegments))
+              inlineFragmentBranch.CommandLineInvocationTypes.selectionPathSegments))
   | Error message -> failwith message
 
 let testFragmentSpreadParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "query";
         "--field";
@@ -634,33 +634,33 @@ let testFragmentSpreadParsing () =
   with
   | Ok invocation -> (
       let operationDefinition =
-        List.hd invocation.CommandLineInvocation.operationDefinitions
+        List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let fragmentSpreadBranch =
-        operationDefinition.CommandLineInvocation.selectionBranches |> List.rev
+        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
         |> List.hd
       in
       match
         List.rev
-          fragmentSpreadBranch.CommandLineInvocation.selectionPathSegments
+          fragmentSpreadBranch.CommandLineInvocationTypes.selectionPathSegments
         |> List.hd
       with
-      | CommandLineInvocation.FragmentSpreadSegment fragmentSpreadSegment ->
+      | CommandLineInvocationTypes.FragmentSpreadSegment fragmentSpreadSegment ->
           assertEqual "mediaCore"
-            fragmentSpreadSegment.CommandLineInvocation.fragmentSpreadName;
+            fragmentSpreadSegment.CommandLineInvocationTypes.fragmentSpreadName;
           assertEqual "1"
             (string_of_int
                (List.length
                   fragmentSpreadSegment
-                    .CommandLineInvocation.fragmentSpreadDirectiveTexts))
-      | CommandLineInvocation.FieldSegment _
-      | CommandLineInvocation.InlineFragmentSegment _ ->
+                    .CommandLineInvocationTypes.fragmentSpreadDirectiveTexts))
+      | CommandLineInvocationTypes.FieldSegment _
+      | CommandLineInvocationTypes.InlineFragmentSegment _ ->
           failwith "Expected fragment spread segment")
   | Error message -> failwith message
 
 let testMultipleOperationsRequireSelectedOperationName () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "--operation";
         "query:Viewer";
@@ -681,7 +681,7 @@ let testMultipleOperationsRequireSelectedOperationName () =
 
 let testMultipleOperationParsing () =
   match
-    CommandLineInvocation.invocationOfArguments
+    CommandLineInvocationParser.invocationOfArguments
       [
         "--operation";
         "query:Viewer";
@@ -702,87 +702,87 @@ let testMultipleOperationParsing () =
   | Ok invocation ->
       assertEqual "2"
         (string_of_int
-           (List.length invocation.CommandLineInvocation.operationDefinitions));
+           (List.length invocation.CommandLineInvocationTypes.operationDefinitions));
       assertEqual "UserLookup"
-        (Option.get invocation.CommandLineInvocation.selectedOperationName)
+        (Option.get invocation.CommandLineInvocationTypes.selectedOperationName)
   | Error message -> failwith message
 
 let testSchemaCommandParsing () =
-  match SchemaCommand.invocationOfArguments [ "schema" ] with
+  match SchemaArgumentParser.invocationOfArguments [ "schema" ] with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionQuery"
-        (Option.get schemaCommand.SchemaCommand.operationName);
+        (Option.get schemaCommand.SchemaCommandTypes.operationName);
       assertEqual "0"
         (string_of_int
-           (match schemaCommand.SchemaCommand.variables with
+           (match schemaCommand.SchemaCommandTypes.variables with
            | Some _ -> 1
            | None -> 0));
       assertEqual "0"
         (string_of_int
-           (match schemaCommand.SchemaCommand.requestedDirectiveName with
+           (match schemaCommand.SchemaCommandTypes.requestedDirectiveName with
            | Some _ -> 1
            | None -> 0));
-      assertContainsSubstring "__schema" schemaCommand.SchemaCommand.queryText;
+      assertContainsSubstring "__schema" schemaCommand.SchemaCommandTypes.queryText;
       assertContainsSubstring "fragment FullType"
-        schemaCommand.SchemaCommand.queryText
+        schemaCommand.SchemaCommandTypes.queryText
   | Ok None -> failwith "Expected schema command"
   | Error message -> failwith message
 
 let testSchemaTypeCommandParsing () =
-  match SchemaCommand.invocationOfArguments [ "schema"; "--type"; "Media" ] with
+  match SchemaArgumentParser.invocationOfArguments [ "schema"; "--type"; "Media" ] with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionTypeQuery"
-        (Option.get schemaCommand.SchemaCommand.operationName);
+        (Option.get schemaCommand.SchemaCommandTypes.operationName);
       assertContainsSubstring "__type(name: $name)"
-        schemaCommand.SchemaCommand.queryText;
+        schemaCommand.SchemaCommandTypes.queryText;
       assertEqual "0"
         (string_of_int
-           (match schemaCommand.SchemaCommand.requestedDirectiveName with
+           (match schemaCommand.SchemaCommandTypes.requestedDirectiveName with
            | Some _ -> 1
            | None -> 0));
       assertEqual "{\"name\":\"Media\"}"
-        (schemaCommand.SchemaCommand.variables |> Option.get
+        (schemaCommand.SchemaCommandTypes.variables |> Option.get
        |> Yojson.Safe.to_string)
   | Ok None -> failwith "Expected schema type command"
   | Error message -> failwith message
 
 let testSchemaDirectiveCommandParsing () =
   match
-    SchemaCommand.invocationOfArguments [ "schema"; "--directive"; "include" ]
+    SchemaArgumentParser.invocationOfArguments [ "schema"; "--directive"; "include" ]
   with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionDirectiveQuery"
-        (Option.get schemaCommand.SchemaCommand.operationName);
-      assertContainsSubstring "directives" schemaCommand.SchemaCommand.queryText;
+        (Option.get schemaCommand.SchemaCommandTypes.operationName);
+      assertContainsSubstring "directives" schemaCommand.SchemaCommandTypes.queryText;
       assertEqual "include"
-        (Option.get schemaCommand.SchemaCommand.requestedDirectiveName);
+        (Option.get schemaCommand.SchemaCommandTypes.requestedDirectiveName);
       assertEqual "0"
         (string_of_int
-           (match schemaCommand.SchemaCommand.variables with
+           (match schemaCommand.SchemaCommandTypes.variables with
            | Some _ -> 1
            | None -> 0))
   | Ok None -> failwith "Expected schema directive command"
   | Error message -> failwith message
 
 let testSchemaEqualsOptionParsing () =
-  (match SchemaCommand.invocationOfArguments [ "schema"; "--type=Media" ] with
+  (match SchemaArgumentParser.invocationOfArguments [ "schema"; "--type=Media" ] with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionTypeQuery"
-        (Option.get schemaCommand.SchemaCommand.operationName)
+        (Option.get schemaCommand.SchemaCommandTypes.operationName)
   | Ok None -> failwith "Expected schema type command"
   | Error message -> failwith message);
   match
-    SchemaCommand.invocationOfArguments [ "schema"; "--directive=include" ]
+    SchemaArgumentParser.invocationOfArguments [ "schema"; "--directive=include" ]
   with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionDirectiveQuery"
-        (Option.get schemaCommand.SchemaCommand.operationName)
+        (Option.get schemaCommand.SchemaCommandTypes.operationName)
   | Ok None -> failwith "Expected schema directive command"
   | Error message -> failwith message
 
 let testSchemaCommandRejectsConflictingOptions () =
   match
-    SchemaCommand.invocationOfArguments
+    SchemaArgumentParser.invocationOfArguments
       [ "schema"; "--type"; "Media"; "--directive"; "include" ]
   with
   | Ok _ -> failwith "Expected schema command rejection"
@@ -790,7 +790,7 @@ let testSchemaCommandRejectsConflictingOptions () =
 
 let testSchemaCommandRejectsMissingOptionValues () =
   match
-    SchemaCommand.invocationOfArguments
+    SchemaArgumentParser.invocationOfArguments
       [ "schema"; "--type"; "--directive"; "include" ]
   with
   | Ok _ -> failwith "Expected missing type value rejection"
@@ -836,23 +836,23 @@ let testRequestHeaderExtractionRejectsMissingHeaderValue () =
       assertContainsSubstring "Missing value for option --header." message
 
 let testCommandLineHelpDetection () =
-  if not (CommandLineInvocation.helpRequestedOfArguments [ "--help" ]) then
+  if not (CommandLineInvocationShared.helpRequestedOfArguments [ "--help" ]) then
     failwith "Expected top-level help detection";
-  if not (CommandLineInvocation.helpRequestedOfArguments [ "query"; "--help" ])
+  if not (CommandLineInvocationShared.helpRequestedOfArguments [ "query"; "--help" ])
   then failwith "Expected trailing flag help detection";
-  if CommandLineInvocation.helpRequestedOfArguments [ "--bogus"; "help" ] then
+  if CommandLineInvocationShared.helpRequestedOfArguments [ "--bogus"; "help" ] then
     failwith "Unexpected bare help token detection";
   if
-    CommandLineInvocation.helpRequestedOfArguments
+    CommandLineInvocationShared.helpRequestedOfArguments
       [ "query"; "--help"; "extra" ]
   then failwith "Unexpected non-trailing help detection"
 
 let testSchemaHelpDetection () =
-  if not (SchemaCommand.helpRequestedOfArguments [ "schema"; "--help" ]) then
+  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "--help" ]) then
     failwith "Expected schema help detection";
-  if not (SchemaCommand.helpRequestedOfArguments [ "schema"; "help" ]) then
+  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "help" ]) then
     failwith "Expected schema bare help detection";
-  if SchemaCommand.helpRequestedOfArguments [ "schema"; "nope"; "help" ] then
+  if SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "nope"; "help" ] then
     failwith "Unexpected schema malformed help detection"
 
 let () =

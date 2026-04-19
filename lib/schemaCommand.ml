@@ -1,16 +1,5 @@
 open Lwt.Infix
 
-type t = SchemaCommandTypes.t = {
-  operationName : string option;
-  queryText : string;
-  variables : Yojson.Safe.t option;
-  requestedDirectiveName : string option;
-}
-
-let usageText = SchemaArgumentParser.usageText
-let helpRequestedOfArguments = SchemaArgumentParser.helpRequestedOfArguments
-let invocationOfArguments = SchemaArgumentParser.invocationOfArguments
-
 let filterDirectiveResponse ~directiveName responseBody =
   let filteredDirectives directives =
     directives
@@ -60,12 +49,13 @@ let filterDirectiveResponse ~directiveName responseBody =
     Error
       (Printf.sprintf "Failed to parse schema directive response: %s" message)
 
-let execute ~headers ~endpoint (schemaCommand : t) =
-  GraphQlTransport.executeQuery ~operationName:schemaCommand.operationName
-    ~variables:schemaCommand.variables ~headers ~endpoint
-    ~query:schemaCommand.queryText
+let execute ~headers ~endpoint (schemaCommand : SchemaCommandTypes.t) =
+  GraphQlTransport.executeQuery
+    ~operationName:schemaCommand.SchemaCommandTypes.operationName
+    ~variables:schemaCommand.SchemaCommandTypes.variables ~headers ~endpoint
+    ~query:schemaCommand.SchemaCommandTypes.queryText
   >>= fun (statusCode, responseBody) ->
-  match schemaCommand.requestedDirectiveName with
+  match schemaCommand.SchemaCommandTypes.requestedDirectiveName with
   | None -> Lwt.return (statusCode, responseBody)
   | Some _ when statusCode < 200 || statusCode >= 300 ->
       Lwt.return (statusCode, responseBody)

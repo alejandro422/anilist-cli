@@ -9,7 +9,6 @@
   commandLineInvocationState
   commandLineInvocationTypes
   commandLineInvocationValidation
-  commandLineInvocation
   graphQlDirective
   graphQlFragmentDefinition
   graphQlOperation
@@ -27,13 +26,8 @@
   stringPrefix)
  (private_modules
   commandLineInvocationBranch
-  commandLineInvocationParser
-  commandLineInvocationShared
   commandLineInvocationState
-  commandLineInvocationTypes
   commandLineInvocationValidation
-  schemaArgumentParser
-  schemaCommandTypes
   schemaQueries
   stringPrefix)
  (libraries cohttp-lwt-unix lwt uri yojson)

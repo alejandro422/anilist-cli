@@ -35,19 +35,20 @@ let run ~headers invocation =
       let loweredRequest =
         Anilist.LoweringEngine.lower
           ~operationDefinitions:
-            invocation.Anilist.CommandLineInvocation.operationDefinitions
+            invocation.Anilist.CommandLineInvocationTypes.operationDefinitions
           ~selectedOperationName:
-            invocation.Anilist.CommandLineInvocation.selectedOperationName
+            invocation.Anilist.CommandLineInvocationTypes.selectedOperationName
           ~structuredFragmentDefinitions:
             invocation
-              .Anilist.CommandLineInvocation.structuredFragmentDefinitions
+              .Anilist.CommandLineInvocationTypes.structuredFragmentDefinitions
           ~rawFragmentDefinitionTexts:
-            invocation.Anilist.CommandLineInvocation.rawFragmentDefinitionTexts
+            invocation
+              .Anilist.CommandLineInvocationTypes.rawFragmentDefinitionTexts
       in
       if loweredRequest.Anilist.LoweringEngine.operations = [] then
         printAndExit stderr 1
           (Printf.sprintf "Selection set cannot be empty.\n\n%s"
-             Anilist.CommandLineInvocation.usageText);
+             Anilist.CommandLineInvocationShared.usageText);
       let query =
         loweredRequest |> Anilist.LoweringEngine.graphQlQueryOfRequest
         |> Anilist.GraphQlQuery.render
@@ -76,7 +77,7 @@ let () =
   | Error message -> printAndExit stderr 1 message
   | Ok requestOptions -> (
       match
-        Anilist.SchemaCommand.invocationOfArguments
+        Anilist.SchemaArgumentParser.invocationOfArguments
           requestOptions.Anilist.RequestOptions.remainingArguments
       with
       | Ok (Some schemaCommand) ->
@@ -93,13 +94,13 @@ let () =
                     printResponse statusCode responseBody)))
       | Error message ->
           if
-            Anilist.SchemaCommand.helpRequestedOfArguments
+            Anilist.SchemaArgumentParser.helpRequestedOfArguments
               requestOptions.Anilist.RequestOptions.remainingArguments
           then printAndExit stdout 0 message
           else printAndExit stderr 1 message
       | Ok None -> (
           match
-            Anilist.CommandLineInvocation.invocationOfArguments
+            Anilist.CommandLineInvocationParser.invocationOfArguments
               requestOptions.Anilist.RequestOptions.remainingArguments
           with
           | Ok invocation ->
@@ -110,7 +111,7 @@ let () =
                       invocation))
           | Error message ->
               if
-                Anilist.CommandLineInvocation.helpRequestedOfArguments
+                Anilist.CommandLineInvocationShared.helpRequestedOfArguments
                   requestOptions.Anilist.RequestOptions.remainingArguments
               then printAndExit stdout 0 message
               else printAndExit stderr 1 message))
