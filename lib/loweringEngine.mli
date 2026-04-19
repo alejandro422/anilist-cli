@@ -1,46 +1,50 @@
-type operationType = Query | Mutation | Subscription
+type operationType = CommandLineInvocationTypes.operationType =
+  | Query
+  | Mutation
+  | Subscription
 
-type fieldSegment = {
+type fieldSegment = CommandLineInvocationTypes.fieldSegment = {
   fieldName : string;
-  alias : string option;
-  optionPairs : (string * string) list;
-  fieldDirectives : string list;
+  fieldAlias : string option;
+  fieldArgumentPairs : (string * string) list;
+  fieldDirectiveTexts : string list;
 }
 
-type inlineFragmentSegment = {
-  typeCondition : string;
-  inlineFragmentDirectives : string list;
+type inlineFragmentSegment = CommandLineInvocationTypes.inlineFragmentSegment = {
+  inlineFragmentTypeCondition : string;
+  inlineFragmentDirectiveTexts : string list;
 }
 
-type fragmentSpreadSegment = {
-  name : string;
-  fragmentSpreadDirectives : string list;
+type fragmentSpreadSegment = CommandLineInvocationTypes.fragmentSpreadSegment = {
+  fragmentSpreadName : string;
+  fragmentSpreadDirectiveTexts : string list;
 }
 
-type selectionPathSegment =
+type selectionPathSegment = CommandLineInvocationTypes.selectionPathSegment =
   | FieldSegment of fieldSegment
   | InlineFragmentSegment of inlineFragmentSegment
   | FragmentSpreadSegment of fragmentSpreadSegment
 
-type selectionBranch = {
+type selectionBranch = CommandLineInvocationTypes.selectionBranch = {
   selectionPathSegments : selectionPathSegment list;
   selectionExpressions : string list;
 }
 
-type operationDefinition = {
+type operationDefinition = CommandLineInvocationTypes.operationDefinition = {
   operationType : operationType;
   operationName : string option;
   variableDefinitions : string list;
-  operationVariableAssignments : (string * string) list;
-  operationDirectives : string list;
+  variableAssignments : (string * string) list;
+  operationDirectiveTexts : string list;
   rootSelectionExpressions : string list;
   selectionBranches : selectionBranch list;
 }
 
-type structuredFragmentDefinition = {
+type structuredFragmentDefinition =
+  CommandLineInvocationTypes.structuredFragmentDefinition = {
   fragmentName : string;
   fragmentTypeCondition : string;
-  fragmentDirectives : string list;
+  fragmentDirectiveTexts : string list;
   fragmentRootSelectionExpressions : string list;
   fragmentSelectionBranches : selectionBranch list;
 }
@@ -48,7 +52,7 @@ type structuredFragmentDefinition = {
 type request = {
   operations : GraphQlOperation.t list;
   selectedOperationName : string option;
-  variableAssignments : (string * CliArgument.value) list;
+  loweredVariableAssignments : (string * CliArgument.value) list;
   fragmentDefinitions : GraphQlFragmentDefinition.t list;
 }
 

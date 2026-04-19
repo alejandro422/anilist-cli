@@ -1,46 +1,50 @@
-type operationType = Query | Mutation | Subscription
+type operationType = CommandLineInvocationTypes.operationType =
+  | Query
+  | Mutation
+  | Subscription
 
-type fieldSegment = {
+type fieldSegment = CommandLineInvocationTypes.fieldSegment = {
   fieldName : string;
-  alias : string option;
-  optionPairs : (string * string) list;
-  fieldDirectives : string list;
+  fieldAlias : string option;
+  fieldArgumentPairs : (string * string) list;
+  fieldDirectiveTexts : string list;
 }
 
-type inlineFragmentSegment = {
-  typeCondition : string;
-  inlineFragmentDirectives : string list;
+type inlineFragmentSegment = CommandLineInvocationTypes.inlineFragmentSegment = {
+  inlineFragmentTypeCondition : string;
+  inlineFragmentDirectiveTexts : string list;
 }
 
-type fragmentSpreadSegment = {
-  name : string;
-  fragmentSpreadDirectives : string list;
+type fragmentSpreadSegment = CommandLineInvocationTypes.fragmentSpreadSegment = {
+  fragmentSpreadName : string;
+  fragmentSpreadDirectiveTexts : string list;
 }
 
-type selectionPathSegment =
+type selectionPathSegment = CommandLineInvocationTypes.selectionPathSegment =
   | FieldSegment of fieldSegment
   | InlineFragmentSegment of inlineFragmentSegment
   | FragmentSpreadSegment of fragmentSpreadSegment
 
-type selectionBranch = {
+type selectionBranch = CommandLineInvocationTypes.selectionBranch = {
   selectionPathSegments : selectionPathSegment list;
   selectionExpressions : string list;
 }
 
-type operationDefinition = {
+type operationDefinition = CommandLineInvocationTypes.operationDefinition = {
   operationType : operationType;
   operationName : string option;
   variableDefinitions : string list;
-  operationVariableAssignments : (string * string) list;
-  operationDirectives : string list;
+  variableAssignments : (string * string) list;
+  operationDirectiveTexts : string list;
   rootSelectionExpressions : string list;
   selectionBranches : selectionBranch list;
 }
 
-type structuredFragmentDefinition = {
+type structuredFragmentDefinition =
+  CommandLineInvocationTypes.structuredFragmentDefinition = {
   fragmentName : string;
   fragmentTypeCondition : string;
-  fragmentDirectives : string list;
+  fragmentDirectiveTexts : string list;
   fragmentRootSelectionExpressions : string list;
   fragmentSelectionBranches : selectionBranch list;
 }
@@ -48,7 +52,7 @@ type structuredFragmentDefinition = {
 type request = {
   operations : GraphQlOperation.t list;
   selectedOperationName : string option;
-  variableAssignments : (string * CliArgument.value) list;
+  loweredVariableAssignments : (string * CliArgument.value) list;
   fragmentDefinitions : GraphQlFragmentDefinition.t list;
 }
 
@@ -61,7 +65,7 @@ let graphQlArgumentsOfOptionPairs optionPairs =
 
 let graphQlDirectives directives = directives |> List.map GraphQlDirective.make
 
-let loweredVariableAssignments variableAssignments =
+let valuesOfVariableAssignments variableAssignments =
   variableAssignments
   |> List.map (fun (variableName, rawValue) ->
       ( variableName,
@@ -81,46 +85,51 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
       raise (Invalid_argument "Expected at least one selection path segment")
   | [
    FieldSegment
-     ({ fieldName; alias; optionPairs; fieldDirectives } : fieldSegment);
+     ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
+       : fieldSegment);
   ] ->
       GraphQlSelection.field
-        (GraphQlSelection.makeField ?alias
+        (GraphQlSelection.makeField ?alias:fieldAlias
            ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
-           ~arguments:(graphQlArgumentsOfOptionPairs optionPairs)
-           ~directives:(graphQlDirectives fieldDirectives)
+           ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
+           ~directives:(graphQlDirectives fieldDirectiveTexts)
            ~selectionSet ())
   | [
    InlineFragmentSegment
-     ({ typeCondition; inlineFragmentDirectives } : inlineFragmentSegment);
+     ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
+       : inlineFragmentSegment);
   ] ->
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
-           ~typeCondition:(graphQlTypeCondition typeCondition)
-           ~directives:(graphQlDirectives inlineFragmentDirectives)
+           ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
+           ~directives:(graphQlDirectives inlineFragmentDirectiveTexts)
            ~selectionSet ())
   | [
    FragmentSpreadSegment
-     ({ name; fragmentSpreadDirectives } : fragmentSpreadSegment);
+     ({ fragmentSpreadName; fragmentSpreadDirectiveTexts }
+       : fragmentSpreadSegment);
   ] ->
       GraphQlSelection.fragmentSpread
-        (GraphQlSelection.makeFragmentSpread ~name
-           ~directives:(graphQlDirectives fragmentSpreadDirectives)
+        (GraphQlSelection.makeFragmentSpread ~name:fragmentSpreadName
+           ~directives:(graphQlDirectives fragmentSpreadDirectiveTexts)
            ())
   | FieldSegment
-      ({ fieldName; alias; optionPairs; fieldDirectives } : fieldSegment)
+      ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
+        : fieldSegment)
     :: remainingSelectionPathSegments ->
       let childSelection =
         lowerSelectionPathSegments ~isTargetRoot:false
           remainingSelectionPathSegments selectionSet
       in
       GraphQlSelection.field
-        (GraphQlSelection.makeField ?alias
+        (GraphQlSelection.makeField ?alias:fieldAlias
            ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
-           ~arguments:(graphQlArgumentsOfOptionPairs optionPairs)
-           ~directives:(graphQlDirectives fieldDirectives)
+           ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
+           ~directives:(graphQlDirectives fieldDirectiveTexts)
            ~selectionSet:[ childSelection ] ())
   | InlineFragmentSegment
-      ({ typeCondition; inlineFragmentDirectives } : inlineFragmentSegment)
+      ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
+        : inlineFragmentSegment)
     :: remainingSelectionPathSegments ->
       let childSelection =
         lowerSelectionPathSegments ~isTargetRoot:false
@@ -128,8 +137,8 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
       in
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
-           ~typeCondition:(graphQlTypeCondition typeCondition)
-           ~directives:(graphQlDirectives inlineFragmentDirectives)
+           ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
+           ~directives:(graphQlDirectives inlineFragmentDirectiveTexts)
            ~selectionSet:[ childSelection ] ())
   | FragmentSpreadSegment _ :: _ ->
       raise
@@ -193,7 +202,7 @@ let lowerStructuredFragmentDefinition structuredFragmentDefinition =
     ~typeCondition:
       (graphQlTypeCondition structuredFragmentDefinition.fragmentTypeCondition)
     ~directives:
-      (graphQlDirectives structuredFragmentDefinition.fragmentDirectives)
+      (graphQlDirectives structuredFragmentDefinition.fragmentDirectiveTexts)
     ~selectionSet ()
 
 let lowerOperationDefinition
@@ -201,8 +210,8 @@ let lowerOperationDefinition
        operationType;
        operationName;
        variableDefinitions;
-       operationVariableAssignments = variableAssignments;
-       operationDirectives = directives;
+       variableAssignments;
+       operationDirectiveTexts;
        rootSelectionExpressions;
        selectionBranches;
      } :
@@ -213,11 +222,11 @@ let lowerOperationDefinition
   in
   let operation =
     GraphQlOperation.make ?name:operationName ~variableDefinitions
-      ~directives:(graphQlDirectives directives)
+      ~directives:(graphQlDirectives operationDirectiveTexts)
       ~operationType:(graphQlOperationTypeOfOperationType operationType)
       ~selectionSet:operationSelectionSet ()
   in
-  (operation, loweredVariableAssignments variableAssignments)
+  (operation, valuesOfVariableAssignments variableAssignments)
 
 let rec uniqueNames seenNames = function
   | [] -> true
@@ -269,7 +278,7 @@ let lower ~operationDefinitions ~selectedOperationName
            "Multiple-operation documents require every operation to be named");
     if not (uniqueNames [] operationNames) then
       raise (Invalid_argument "Operation names must be unique"));
-  let selectedOperationName, variableAssignments =
+  let selectedOperationName, loweredVariableAssignments =
     selectedOperationAndVariables loweredOperations selectedOperationName
   in
   let fragmentDefinitions =
@@ -279,7 +288,7 @@ let lower ~operationDefinitions ~selectedOperationName
   {
     operations = loweredOperations |> List.map fst;
     selectedOperationName;
-    variableAssignments;
+    loweredVariableAssignments;
     fragmentDefinitions;
   }
 

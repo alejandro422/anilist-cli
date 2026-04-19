@@ -30,124 +30,17 @@ let runProtected task =
            (Printexc.to_string exceptionValue));
       Lwt.return 1)
 
-let loweringSelectionPathSegment selectionPathSegment =
-  match selectionPathSegment with
-  | Anilist.CommandLineInvocation.FieldSegment fieldSegment ->
-      Anilist.LoweringEngine.FieldSegment
-        {
-          Anilist.LoweringEngine.fieldName =
-            fieldSegment.Anilist.CommandLineInvocation.fieldName;
-          alias = fieldSegment.Anilist.CommandLineInvocation.fieldAlias;
-          optionPairs =
-            fieldSegment.Anilist.CommandLineInvocation.fieldArgumentPairs;
-          fieldDirectives =
-            fieldSegment.Anilist.CommandLineInvocation.fieldDirectiveTexts;
-        }
-  | Anilist.CommandLineInvocation.InlineFragmentSegment inlineFragmentSegment ->
-      Anilist.LoweringEngine.InlineFragmentSegment
-        {
-          Anilist.LoweringEngine.typeCondition =
-            inlineFragmentSegment
-              .Anilist.CommandLineInvocation.inlineFragmentTypeCondition;
-          inlineFragmentDirectives =
-            inlineFragmentSegment
-              .Anilist.CommandLineInvocation.inlineFragmentDirectiveTexts;
-        }
-  | Anilist.CommandLineInvocation.FragmentSpreadSegment fragmentSpreadSegment ->
-      Anilist.LoweringEngine.FragmentSpreadSegment
-        {
-          Anilist.LoweringEngine.name =
-            fragmentSpreadSegment
-              .Anilist.CommandLineInvocation.fragmentSpreadName;
-          fragmentSpreadDirectives =
-            fragmentSpreadSegment
-              .Anilist.CommandLineInvocation.fragmentSpreadDirectiveTexts;
-        }
-
 let run ~headers invocation =
   runProtected (fun () ->
-      let loweringOperationDefinition operationDefinition =
-        let operationType =
-          match
-            operationDefinition.Anilist.CommandLineInvocation.operationType
-          with
-          | Anilist.CommandLineInvocation.Query -> Anilist.LoweringEngine.Query
-          | Anilist.CommandLineInvocation.Mutation ->
-              Anilist.LoweringEngine.Mutation
-          | Anilist.CommandLineInvocation.Subscription ->
-              Anilist.LoweringEngine.Subscription
-        in
-        {
-          Anilist.LoweringEngine.operationType;
-          operationName =
-            operationDefinition.Anilist.CommandLineInvocation.operationName;
-          variableDefinitions =
-            operationDefinition
-              .Anilist.CommandLineInvocation.variableDefinitions;
-          operationVariableAssignments =
-            operationDefinition
-              .Anilist.CommandLineInvocation.variableAssignments;
-          operationDirectives =
-            operationDefinition
-              .Anilist.CommandLineInvocation.operationDirectiveTexts;
-          rootSelectionExpressions =
-            operationDefinition
-              .Anilist.CommandLineInvocation.rootSelectionExpressions;
-          selectionBranches =
-            operationDefinition.Anilist.CommandLineInvocation.selectionBranches
-            |> List.map (fun selectionBranch ->
-                {
-                  Anilist.LoweringEngine.selectionPathSegments =
-                    selectionBranch
-                      .Anilist.CommandLineInvocation.selectionPathSegments
-                    |> List.map loweringSelectionPathSegment;
-                  selectionExpressions =
-                    selectionBranch
-                      .Anilist.CommandLineInvocation.selectionExpressions;
-                });
-        }
-      in
       let loweredRequest =
         Anilist.LoweringEngine.lower
           ~operationDefinitions:
-            (invocation.Anilist.CommandLineInvocation.operationDefinitions
-            |> List.map loweringOperationDefinition)
+            invocation.Anilist.CommandLineInvocation.operationDefinitions
           ~selectedOperationName:
             invocation.Anilist.CommandLineInvocation.selectedOperationName
           ~structuredFragmentDefinitions:
-            (invocation
-               .Anilist.CommandLineInvocation.structuredFragmentDefinitions
-            |> List.map (fun structuredFragmentDefinition ->
-                {
-                  Anilist.LoweringEngine.fragmentName =
-                    structuredFragmentDefinition
-                      .Anilist.CommandLineInvocation.fragmentName;
-                  fragmentTypeCondition =
-                    structuredFragmentDefinition
-                      .Anilist.CommandLineInvocation.fragmentTypeCondition;
-                  fragmentDirectives =
-                    structuredFragmentDefinition
-                      .Anilist.CommandLineInvocation.fragmentDirectiveTexts;
-                  fragmentRootSelectionExpressions =
-                    structuredFragmentDefinition
-                      .Anilist.CommandLineInvocation
-                       .fragmentRootSelectionExpressions;
-                  fragmentSelectionBranches =
-                    structuredFragmentDefinition
-                      .Anilist.CommandLineInvocation.fragmentSelectionBranches
-                    |> List.map (fun selectionBranch ->
-                        {
-                          Anilist.LoweringEngine.selectionPathSegments =
-                            selectionBranch
-                              .Anilist.CommandLineInvocation
-                               .selectionPathSegments
-                            |> List.map loweringSelectionPathSegment;
-                          selectionExpressions =
-                            selectionBranch
-                              .Anilist.CommandLineInvocation
-                               .selectionExpressions;
-                        });
-                }))
+            invocation
+              .Anilist.CommandLineInvocation.structuredFragmentDefinitions
           ~rawFragmentDefinitionTexts:
             invocation.Anilist.CommandLineInvocation.rawFragmentDefinitionTexts
       in
@@ -160,7 +53,9 @@ let run ~headers invocation =
         |> Anilist.GraphQlQuery.render
       in
       let variables =
-        match loweredRequest.Anilist.LoweringEngine.variableAssignments with
+        match
+          loweredRequest.Anilist.LoweringEngine.loweredVariableAssignments
+        with
         | [] -> None
         | variableAssignments ->
             Some

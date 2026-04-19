@@ -18,21 +18,27 @@ let fieldSegment ?alias ?(directives = []) fieldName optionPairs =
   let loweredFieldSegment : LoweringEngine.fieldSegment =
     {
       LoweringEngine.fieldName;
-      LoweringEngine.alias;
-      LoweringEngine.optionPairs;
-      LoweringEngine.fieldDirectives = directives;
+      LoweringEngine.fieldAlias = alias;
+      LoweringEngine.fieldArgumentPairs = optionPairs;
+      LoweringEngine.fieldDirectiveTexts = directives;
     }
   in
   LoweringEngine.FieldSegment loweredFieldSegment
 
 let inlineFragmentSegment ?(directives = []) typeCondition =
   LoweringEngine.InlineFragmentSegment
-    ({ LoweringEngine.typeCondition; inlineFragmentDirectives = directives }
+    ({
+       LoweringEngine.inlineFragmentTypeCondition = typeCondition;
+       inlineFragmentDirectiveTexts = directives;
+     }
       : LoweringEngine.inlineFragmentSegment)
 
 let fragmentSpreadSegment ?(directives = []) name =
   LoweringEngine.FragmentSpreadSegment
-    ({ LoweringEngine.name; fragmentSpreadDirectives = directives }
+    ({
+       LoweringEngine.fragmentSpreadName = name;
+       fragmentSpreadDirectiveTexts = directives;
+     }
       : LoweringEngine.fragmentSpreadSegment)
 
 let selectionBranch selectionPathSegments selectionExpressions =
@@ -45,8 +51,8 @@ let operationDefinition ?operationName ?(variableDefinitions = [])
      LoweringEngine.operationType = LoweringEngine.Query;
      LoweringEngine.operationName;
      LoweringEngine.variableDefinitions;
-     LoweringEngine.operationVariableAssignments = variableAssignments;
-     LoweringEngine.operationDirectives = directives;
+     LoweringEngine.variableAssignments;
+     LoweringEngine.operationDirectiveTexts = directives;
      LoweringEngine.rootSelectionExpressions;
      LoweringEngine.selectionBranches;
    }
@@ -58,7 +64,7 @@ let structuredFragmentDefinition ?(directives = []) fragmentName
   {
     LoweringEngine.fragmentName;
     fragmentTypeCondition;
-    fragmentDirectives = directives;
+    fragmentDirectiveTexts = directives;
     fragmentRootSelectionExpressions;
     fragmentSelectionBranches;
   }
@@ -93,9 +99,9 @@ let testExplicitOperationWithMultipleRootFields () =
              LoweringEngine.operationType = LoweringEngine.Query;
              LoweringEngine.operationName = Some "Viewer";
              LoweringEngine.variableDefinitions = [ "$userName: String!" ];
-             LoweringEngine.operationVariableAssignments =
+             LoweringEngine.variableAssignments =
                [ ("userName", "string:fuwn") ];
-             LoweringEngine.operationDirectives = [ "cacheControl(maxAge: 60)" ];
+             LoweringEngine.operationDirectiveTexts = [ "cacheControl(maxAge: 60)" ];
              LoweringEngine.rootSelectionExpressions = [ "viewer.id" ];
              LoweringEngine.selectionBranches =
                [
@@ -353,8 +359,8 @@ let testMultipleOperationDocumentLowering () =
              LoweringEngine.operationType = LoweringEngine.Query;
              LoweringEngine.operationName = Some "Viewer";
              LoweringEngine.variableDefinitions = [];
-             LoweringEngine.operationVariableAssignments = [];
-             LoweringEngine.operationDirectives = [ "cacheControl(maxAge: 60)" ];
+             LoweringEngine.variableAssignments = [];
+             LoweringEngine.operationDirectiveTexts = [ "cacheControl(maxAge: 60)" ];
              LoweringEngine.rootSelectionExpressions = [ "viewer.id" ];
              LoweringEngine.selectionBranches = [];
            }

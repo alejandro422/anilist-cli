@@ -1,33 +1,36 @@
-type operationType = Query | Mutation | Subscription
+type operationType = CommandLineInvocationTypes.operationType =
+  | Query
+  | Mutation
+  | Subscription
 
-type fieldSegment = {
+type fieldSegment = CommandLineInvocationTypes.fieldSegment = {
   fieldName : string;
   fieldAlias : string option;
   fieldArgumentPairs : (string * string) list;
   fieldDirectiveTexts : string list;
 }
 
-type inlineFragmentSegment = {
+type inlineFragmentSegment = CommandLineInvocationTypes.inlineFragmentSegment = {
   inlineFragmentTypeCondition : string;
   inlineFragmentDirectiveTexts : string list;
 }
 
-type fragmentSpreadSegment = {
+type fragmentSpreadSegment = CommandLineInvocationTypes.fragmentSpreadSegment = {
   fragmentSpreadName : string;
   fragmentSpreadDirectiveTexts : string list;
 }
 
-type selectionPathSegment =
+type selectionPathSegment = CommandLineInvocationTypes.selectionPathSegment =
   | FieldSegment of fieldSegment
   | InlineFragmentSegment of inlineFragmentSegment
   | FragmentSpreadSegment of fragmentSpreadSegment
 
-type selectionBranch = {
+type selectionBranch = CommandLineInvocationTypes.selectionBranch = {
   selectionPathSegments : selectionPathSegment list;
   selectionExpressions : string list;
 }
 
-type operationDefinition = {
+type operationDefinition = CommandLineInvocationTypes.operationDefinition = {
   operationType : operationType;
   operationName : string option;
   variableDefinitions : string list;
@@ -37,7 +40,8 @@ type operationDefinition = {
   selectionBranches : selectionBranch list;
 }
 
-type structuredFragmentDefinition = {
+type structuredFragmentDefinition =
+  CommandLineInvocationTypes.structuredFragmentDefinition = {
   fragmentName : string;
   fragmentTypeCondition : string;
   fragmentDirectiveTexts : string list;
@@ -45,7 +49,7 @@ type structuredFragmentDefinition = {
   fragmentSelectionBranches : selectionBranch list;
 }
 
-type t = {
+type t = CommandLineInvocationTypes.t = {
   operationDefinitions : operationDefinition list;
   selectedOperationName : string option;
   structuredFragmentDefinitions : structuredFragmentDefinition list;
