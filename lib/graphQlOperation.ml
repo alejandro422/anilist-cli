@@ -4,7 +4,7 @@ type t = {
   operationType : operationType;
   name : string option;
   variableDefinitions : string list;
-  directives : GraphQlDirective.t list;
+  directives : string list;
   selectionSet : GraphQlSelection.t list;
 }
 
@@ -22,14 +22,6 @@ let renderVariableDefinitions variableDefinitions =
   | [] -> ""
   | _ -> variableDefinitions |> String.concat ", " |> Printf.sprintf "(%s)"
 
-let renderDirectives directives =
-  match directives with
-  | [] -> ""
-  | _ ->
-      directives
-      |> List.map GraphQlDirective.render
-      |> String.concat " " |> Printf.sprintf " %s"
-
 let renderHeader operation =
   let renderedName =
     match operation.name with Some name -> " " ^ name | None -> ""
@@ -38,4 +30,4 @@ let renderHeader operation =
     (renderOperationType operation.operationType)
     renderedName
     (renderVariableDefinitions operation.variableDefinitions)
-    (renderDirectives operation.directives)
+    (GraphQlSelection.renderDirectives operation.directives)

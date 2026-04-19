@@ -2,18 +2,18 @@ type field = {
   fieldAlias : string option;
   fieldName : string;
   fieldArguments : CliArgument.t list;
-  fieldDirectives : GraphQlDirective.t list;
+  fieldDirectives : string list;
   fieldSelectionSet : t list;
 }
 
 and fragmentSpread = {
   fragmentSpreadName : string;
-  fragmentSpreadDirectives : GraphQlDirective.t list;
+  fragmentSpreadDirectives : string list;
 }
 
 and inlineFragment = {
   inlineFragmentTypeCondition : string option;
-  inlineFragmentDirectives : GraphQlDirective.t list;
+  inlineFragmentDirectives : string list;
   inlineFragmentSelectionSet : t list;
 }
 
@@ -21,6 +21,19 @@ and t =
   | Field of field
   | FragmentSpread of fragmentSpread
   | InlineFragment of inlineFragment
+
+let renderDirectiveText text =
+  let trimmed = String.trim text in
+  if trimmed = "" then invalid_arg "Directive text cannot be empty"
+  else if trimmed.[0] = '@' then trimmed
+  else "@" ^ trimmed
+
+let renderDirectives = function
+  | [] -> ""
+  | directives ->
+      directives
+      |> List.map renderDirectiveText
+      |> String.concat " " |> Printf.sprintf " %s"
 
 let makeField ?alias ?(directives = []) ~name ~arguments ~selectionSet () =
   {
@@ -45,14 +58,6 @@ let field value = Field value
 let fragmentSpread value = FragmentSpread value
 let inlineFragment value = InlineFragment value
 let indentation indentationLevel = String.make (indentationLevel * 2) ' '
-
-let renderDirectives directives =
-  match directives with
-  | [] -> ""
-  | _ ->
-      directives
-      |> List.map GraphQlDirective.render
-      |> String.concat " " |> Printf.sprintf " %s"
 
 let renderArguments arguments =
   match arguments with

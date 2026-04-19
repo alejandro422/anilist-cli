@@ -1,7 +1,7 @@
 type structured = {
   name : string;
   typeCondition : string;
-  directives : GraphQlDirective.t list;
+  directives : string list;
   selectionSet : GraphQlSelection.t list;
 }
 
@@ -16,14 +16,6 @@ let makeRaw text =
     invalid_arg "Fragment definition text cannot be empty"
   else Raw trimmedText
 
-let renderDirectives directives =
-  match directives with
-  | [] -> ""
-  | _ ->
-      directives
-      |> List.map GraphQlDirective.render
-      |> String.concat " " |> Printf.sprintf " %s"
-
 let renderStructured fragmentDefinition =
   let renderedSelectionSet =
     fragmentDefinition.selectionSet
@@ -32,7 +24,7 @@ let renderStructured fragmentDefinition =
   in
   Printf.sprintf "fragment %s on %s%s {\n%s\n}" fragmentDefinition.name
     fragmentDefinition.typeCondition
-    (renderDirectives fragmentDefinition.directives)
+    (GraphQlSelection.renderDirectives fragmentDefinition.directives)
     renderedSelectionSet
 
 let render = function

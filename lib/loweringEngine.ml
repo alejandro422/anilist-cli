@@ -63,8 +63,6 @@ let graphQlArgumentsOfOptionPairs optionPairs =
         ~name:(GraphQlName.lowerCamelCaseOfCliToken optionName)
         ~rawValue:optionValue)
 
-let graphQlDirectives directives = directives |> List.map GraphQlDirective.make
-
 let valuesOfVariableAssignments variableAssignments =
   variableAssignments
   |> List.map (fun (variableName, rawValue) ->
@@ -92,7 +90,7 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
         (GraphQlSelection.makeField ?alias:fieldAlias
            ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
            ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
-           ~directives:(graphQlDirectives fieldDirectiveTexts)
+           ~directives:fieldDirectiveTexts
            ~selectionSet ())
   | [
    InlineFragmentSegment
@@ -102,7 +100,7 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
            ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
-           ~directives:(graphQlDirectives inlineFragmentDirectiveTexts)
+           ~directives:inlineFragmentDirectiveTexts
            ~selectionSet ())
   | [
    FragmentSpreadSegment
@@ -111,7 +109,7 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
   ] ->
       GraphQlSelection.fragmentSpread
         (GraphQlSelection.makeFragmentSpread ~name:fragmentSpreadName
-           ~directives:(graphQlDirectives fragmentSpreadDirectiveTexts)
+           ~directives:fragmentSpreadDirectiveTexts
            ())
   | FieldSegment
       ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
@@ -125,7 +123,7 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
         (GraphQlSelection.makeField ?alias:fieldAlias
            ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
            ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
-           ~directives:(graphQlDirectives fieldDirectiveTexts)
+           ~directives:fieldDirectiveTexts
            ~selectionSet:[ childSelection ] ())
   | InlineFragmentSegment
       ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
@@ -138,7 +136,7 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
            ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
-           ~directives:(graphQlDirectives inlineFragmentDirectiveTexts)
+           ~directives:inlineFragmentDirectiveTexts
            ~selectionSet:[ childSelection ] ())
   | FragmentSpreadSegment _ :: _ ->
       raise
@@ -201,8 +199,7 @@ let lowerStructuredFragmentDefinition structuredFragmentDefinition =
   GraphQlFragmentDefinition.make ~name:structuredFragmentDefinition.fragmentName
     ~typeCondition:
       (graphQlTypeCondition structuredFragmentDefinition.fragmentTypeCondition)
-    ~directives:
-      (graphQlDirectives structuredFragmentDefinition.fragmentDirectiveTexts)
+    ~directives:structuredFragmentDefinition.fragmentDirectiveTexts
     ~selectionSet ()
 
 let lowerOperationDefinition
@@ -222,7 +219,7 @@ let lowerOperationDefinition
   in
   let operation =
     GraphQlOperation.make ?name:operationName ~variableDefinitions
-      ~directives:(graphQlDirectives operationDirectiveTexts)
+      ~directives:operationDirectiveTexts
       ~operationType:(graphQlOperationTypeOfOperationType operationType)
       ~selectionSet:operationSelectionSet ()
   in

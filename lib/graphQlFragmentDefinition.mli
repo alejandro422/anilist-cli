@@ -1,14 +1,14 @@
 type structured = {
   name : string;
   typeCondition : string;
-  directives : GraphQlDirective.t list;
+  directives : string list;
   selectionSet : GraphQlSelection.t list;
 }
 
 type t = Structured of structured | Raw of string
 
 val make :
-  ?directives:GraphQlDirective.t list ->
+  ?directives:string list ->
   name:string ->
   typeCondition:string ->
   selectionSet:GraphQlSelection.t list ->

@@ -34,7 +34,8 @@ let pathSegmentsOfCliField ~capitalizeRootFieldNames fieldPath =
         fieldName)
 
 let sameDirective left right =
-  GraphQlDirective.render left = GraphQlDirective.render right
+  GraphQlSelection.renderDirectiveText left
+  = GraphQlSelection.renderDirectiveText right
 
 let sameArgument left right =
   left.CliArgument.name = right.CliArgument.name

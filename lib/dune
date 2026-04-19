@@ -9,7 +9,6 @@
   commandLineInvocationState
   commandLineInvocationTypes
   commandLineInvocationValidation
-  graphQlDirective
   graphQlFragmentDefinition
   graphQlOperation
   graphQlSelection
