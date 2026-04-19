@@ -9,19 +9,10 @@ let makeInlineFragmentSegment inlineFragmentTypeCondition =
 let makeFragmentSpreadSegment fragmentSpreadName =
   { fragmentSpreadName; fragmentSpreadDirectiveTexts = [] }
 
-let splitAliasAndFieldName pathSegment =
-  match String.split_on_char ':' pathSegment with
-  | [ fieldName ] -> (None, fieldName)
-  | [ alias; fieldName ] -> (Some alias, fieldName)
-  | _ ->
-      raise
-        (Invalid_argument
-           (Printf.sprintf "Invalid field path segment %s\n\n%s" pathSegment
-              CommandLineInvocationShared.usageText))
-
 let fieldPathSegmentOfText pathSegmentText =
   let aliasValue, fieldName =
-    splitAliasAndFieldName (String.trim pathSegmentText)
+    CommandLineInvocationShared.splitAliasAndFieldName
+      (String.trim pathSegmentText)
   in
   let trimmedFieldName = String.trim fieldName in
   if trimmedFieldName = "" then
@@ -255,18 +246,18 @@ let parentSegmentsAndBareText parserState ~currentBranchRequiredMessage pathText
                 CommandLineInvocationShared.usageText))
   in
   if
-    CommandLineInvocationShared.valueHasPrefix
+    StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.currentBranchPathPrefix pathText
   then
     ( currentBranchSegments (),
-      CommandLineInvocationShared.valueWithoutPrefix
+      StringPrefix.valueWithoutPrefix
         ~prefix:CommandLineInvocationShared.currentBranchPathPrefix pathText )
   else if
-    CommandLineInvocationShared.valueHasPrefix
+    StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix pathText
   then
     ( [],
-      CommandLineInvocationShared.valueWithoutPrefix
+      StringPrefix.valueWithoutPrefix
         ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix pathText )
   else
     ( (match currentSelectionBranch with
@@ -291,11 +282,11 @@ let resolvedSelectionPathSegmentsOfFieldPath parserState fieldPath =
     else segments
   in
   if
-    CommandLineInvocationShared.valueHasPrefix
+    StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.currentBranchPathPrefix fieldPath
   then
     let relativeFieldPath =
-      CommandLineInvocationShared.valueWithoutPrefix
+      StringPrefix.valueWithoutPrefix
         ~prefix:CommandLineInvocationShared.currentBranchPathPrefix fieldPath
     in
     let relativeSelectionPathSegments =
@@ -315,11 +306,11 @@ let resolvedSelectionPathSegmentsOfFieldPath parserState fieldPath =
                   CommandLineInvocationShared.usageText)))
     @ relativeSelectionPathSegments
   else if
-    CommandLineInvocationShared.valueHasPrefix
+    StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix fieldPath
   then
     nonemptyFieldSegments
-      (CommandLineInvocationShared.valueWithoutPrefix
+      (StringPrefix.valueWithoutPrefix
          ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix fieldPath)
   else defaultSelectionPathPrefix @ nonemptyFieldSegments fieldPath
 

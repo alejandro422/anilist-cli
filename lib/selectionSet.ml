@@ -7,22 +7,10 @@ let rootFieldPathPrefix = "root:"
 let rootSelectionPathPrefix = "/"
 let fragmentSpreadPrefix = "..."
 
-let valueHasPrefix ~prefix value =
-  String.length value > String.length prefix
-  && String.sub value 0 (String.length prefix) = prefix
-
-let valueWithoutPrefix ~prefix value =
-  String.sub value (String.length prefix)
-    (String.length value - String.length prefix)
-
-let splitAliasAndFieldName segment =
-  match String.split_on_char ':' segment with
-  | [ name ] -> (None, name)
-  | [ alias; name ] -> (Some alias, name)
-  | _ -> invalid_arg "Field path segments may contain at most one alias"
-
 let pathSegmentOfCliSegment ~capitalizeFieldName segment =
-  let aliasValue, fieldName = splitAliasAndFieldName segment in
+  let aliasValue, fieldName =
+    CommandLineInvocationShared.splitAliasAndFieldName segment
+  in
   let normalizedAlias =
     match aliasValue with
     | Some alias when String.trim alias <> "" ->
@@ -165,10 +153,10 @@ let rec fieldOfPathSegments = function
            ~selectionSet:[ childField ] ())
 
 let scopeAndFieldPathOfCliField fieldPath =
-  if valueHasPrefix ~prefix:rootFieldPathPrefix fieldPath then
-    (`Root, valueWithoutPrefix ~prefix:rootFieldPathPrefix fieldPath)
-  else if valueHasPrefix ~prefix:rootSelectionPathPrefix fieldPath then
-    (`Root, valueWithoutPrefix ~prefix:rootSelectionPathPrefix fieldPath)
+  if StringPrefix.valueHasPrefix ~prefix:rootFieldPathPrefix fieldPath then
+    (`Root, StringPrefix.valueWithoutPrefix ~prefix:rootFieldPathPrefix fieldPath)
+  else if StringPrefix.valueHasPrefix ~prefix:rootSelectionPathPrefix fieldPath then
+    (`Root, StringPrefix.valueWithoutPrefix ~prefix:rootSelectionPathPrefix fieldPath)
   else (`Relative, fieldPath)
 
 let selectionOfInlineFragmentPath ~capitalizeRootFieldNames inlineFragmentPath =
@@ -198,13 +186,13 @@ let selectionOfInlineFragmentPath ~capitalizeRootFieldNames inlineFragmentPath =
 let selectionsOfScopedPaths ~capitalizeRootFieldNames scopedPaths =
   scopedPaths |> List.map snd
   |> List.map (fun scopedPath ->
-      if valueHasPrefix ~prefix:fragmentSpreadPrefix scopedPath then
+      if StringPrefix.valueHasPrefix ~prefix:fragmentSpreadPrefix scopedPath then
         let spreadTarget =
-          valueWithoutPrefix ~prefix:fragmentSpreadPrefix scopedPath
+          StringPrefix.valueWithoutPrefix ~prefix:fragmentSpreadPrefix scopedPath
         in
-        if valueHasPrefix ~prefix:"on:" spreadTarget then
+        if StringPrefix.valueHasPrefix ~prefix:"on:" spreadTarget then
           let inlineFragmentPath =
-            valueWithoutPrefix ~prefix:"on:" spreadTarget
+            StringPrefix.valueWithoutPrefix ~prefix:"on:" spreadTarget
           in
           selectionOfInlineFragmentPath ~capitalizeRootFieldNames
             inlineFragmentPath

@@ -23,7 +23,8 @@
   schemaCommand
   schemaCommandTypes
   schemaQueries
-  selectionSet)
+  selectionSet
+  stringPrefix)
  (private_modules
   commandLineInvocationBranch
   commandLineInvocationParser
@@ -33,7 +34,8 @@
   commandLineInvocationValidation
   schemaArgumentParser
   schemaCommandTypes
-  schemaQueries)
+  schemaQueries
+  stringPrefix)
  (libraries cohttp-lwt-unix lwt uri yojson)
  (flags
   (:standard -warn-error +a)))

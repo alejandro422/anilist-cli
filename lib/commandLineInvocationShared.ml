@@ -95,15 +95,17 @@ let optionNameAndValueOfEqualsSyntax token =
       Some (optionName, optionValue)
   | None -> None
 
-let valueHasPrefix ~prefix value =
-  String.length value > String.length prefix
-  && String.sub value 0 (String.length prefix) = prefix
-
-let valueWithoutPrefix ~prefix value =
-  String.sub value (String.length prefix)
-    (String.length value - String.length prefix)
-
 let normalizedAlias alias = GraphQlName.lowerCamelCaseOfCliToken alias
+
+let splitAliasAndFieldName pathSegment =
+  match String.split_on_char ':' pathSegment with
+  | [ fieldName ] -> (None, fieldName)
+  | [ alias; fieldName ] -> (Some alias, fieldName)
+  | _ ->
+      raise
+        (Invalid_argument
+           (Printf.sprintf "Invalid field path segment %s\n\n%s" pathSegment
+              usageText))
 
 let operationTypeOfToken = function
   | "query" -> Some Query
@@ -158,7 +160,7 @@ let variableAssignmentOfText variableAssignmentText =
              (Printf.sprintf
                 "Variable names must use GraphQL variable syntax.\n\n%s"
                 usageText))
-      else if valueHasPrefix ~prefix:"var:" rawValue then
+      else if StringPrefix.valueHasPrefix ~prefix:"var:" rawValue then
         raise
           (Invalid_argument
              (Printf.sprintf

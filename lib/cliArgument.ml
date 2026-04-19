@@ -79,29 +79,22 @@ let jsonLiteralOfValue = function
       invalid_arg "GraphQL variables cannot contain variable references"
   | Json value -> value
 
-let valueHasPrefix ~prefix value =
-  String.length value > String.length prefix
-  && String.sub value 0 (String.length prefix) = prefix
-
-let valueWithoutPrefix ~prefix value =
-  String.sub value (String.length prefix)
-    (String.length value - String.length prefix)
-
 let rawValueLooksLikeFloat rawValue =
   String.contains rawValue '.'
   || String.contains rawValue 'e'
   || String.contains rawValue 'E'
 
 let valueOfRawValue rawValue =
-  if valueHasPrefix ~prefix:stringPrefix rawValue then
-    String (valueWithoutPrefix ~prefix:stringPrefix rawValue)
-  else if valueHasPrefix ~prefix:enumPrefix rawValue then
-    Enum (valueWithoutPrefix ~prefix:enumPrefix rawValue)
-  else if valueHasPrefix ~prefix:variablePrefix rawValue then
-    Variable (valueWithoutPrefix ~prefix:variablePrefix rawValue)
-  else if valueHasPrefix ~prefix:jsonPrefix rawValue then
+  if StringPrefix.valueHasPrefix ~prefix:stringPrefix rawValue then
+    String (StringPrefix.valueWithoutPrefix ~prefix:stringPrefix rawValue)
+  else if StringPrefix.valueHasPrefix ~prefix:enumPrefix rawValue then
+    Enum (StringPrefix.valueWithoutPrefix ~prefix:enumPrefix rawValue)
+  else if StringPrefix.valueHasPrefix ~prefix:variablePrefix rawValue then
+    Variable (StringPrefix.valueWithoutPrefix ~prefix:variablePrefix rawValue)
+  else if StringPrefix.valueHasPrefix ~prefix:jsonPrefix rawValue then
     Json
-      (Yojson.Safe.from_string (valueWithoutPrefix ~prefix:jsonPrefix rawValue))
+      (Yojson.Safe.from_string
+         (StringPrefix.valueWithoutPrefix ~prefix:jsonPrefix rawValue))
   else
     match String.lowercase_ascii rawValue with
     | "null" -> Null

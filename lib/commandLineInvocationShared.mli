@@ -21,9 +21,8 @@ val currentBranchPathPrefix : string
 val absoluteBranchPathPrefix : string
 val isLongOption : string -> bool
 val optionNameAndValueOfEqualsSyntax : string -> (string * string) option
-val valueHasPrefix : prefix:string -> string -> bool
-val valueWithoutPrefix : prefix:string -> string -> string
 val normalizedAlias : string -> string
+val splitAliasAndFieldName : string -> string option * string
 val operationTypeOfToken : string -> operationType option
 val optionPairOfToken : string -> string list -> (string * string) * string list
 val valueOfOptionToken : string -> string list -> string * string list
