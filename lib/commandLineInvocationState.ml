@@ -61,19 +61,21 @@ let finalizedStructuredFragmentDefinitionOfBuilder fragmentDefinitionBuilder =
       finalizedSelectionTarget.builderSelectionBranches;
   }
 
-let finalizedCurrentSelectionBranch parserState =
+let keepParserState parserState = parserState
+
+let raiseMissingContext message _parserState =
+  raise
+    (Invalid_argument
+       (Printf.sprintf "%s\n\n%s" message CommandLineInvocationShared.usageText))
+
+let mapCurrentFragmentOrOperation ~onMissing ~mapFragment ~mapOperation
+    parserState =
   match parserState.currentStructuredFragmentDefinition with
   | Some fragmentDefinitionBuilder ->
       {
         parserState with
         currentStructuredFragmentDefinition =
-          Some
-            {
-              fragmentDefinitionBuilder with
-              builderFragmentSelectionTarget =
-                selectionTargetBuilderWithFinalizedBranch
-                  fragmentDefinitionBuilder.builderFragmentSelectionTarget;
-            };
+          Some (mapFragment fragmentDefinitionBuilder);
       }
   | None -> (
       match parserState.currentOperationDefinition with
@@ -81,15 +83,28 @@ let finalizedCurrentSelectionBranch parserState =
           {
             parserState with
             currentOperationDefinition =
-              Some
-                {
-                  operationDefinitionBuilder with
-                  builderOperationSelectionTarget =
-                    selectionTargetBuilderWithFinalizedBranch
-                      operationDefinitionBuilder.builderOperationSelectionTarget;
-                };
+              Some (mapOperation operationDefinitionBuilder);
           }
-      | None -> parserState)
+      | None -> onMissing parserState)
+
+let mapCurrentSelectionTarget ~onMissing parserState mapTarget =
+  mapCurrentFragmentOrOperation ~onMissing parserState
+    ~mapFragment:(fun fragmentDefinitionBuilder ->
+      {
+        fragmentDefinitionBuilder with
+        builderFragmentSelectionTarget =
+          mapTarget fragmentDefinitionBuilder.builderFragmentSelectionTarget;
+      })
+    ~mapOperation:(fun operationDefinitionBuilder ->
+      {
+        operationDefinitionBuilder with
+        builderOperationSelectionTarget =
+          mapTarget operationDefinitionBuilder.builderOperationSelectionTarget;
+      })
+
+let finalizedCurrentSelectionBranch parserState =
+  mapCurrentSelectionTarget ~onMissing:keepParserState parserState
+    selectionTargetBuilderWithFinalizedBranch
 
 let finalizedCurrentStructuredFragmentDefinition parserState =
   match parserState.currentStructuredFragmentDefinition with
@@ -120,125 +135,48 @@ let finalizedCurrentOperationDefinition parserState =
       }
   | None -> parserState
 
+let missingSelectionContext =
+  raiseMissingContext
+    "Selections require an operation or fragment context."
+
+let missingDirectiveContext =
+  raiseMissingContext
+    "Directives require an operation or fragment context."
+
 let withUpdatedCurrentSelectionBranch parserState selectionBranchBuilder =
-  match parserState.currentStructuredFragmentDefinition with
-  | Some fragmentDefinitionBuilder ->
+  mapCurrentSelectionTarget ~onMissing:missingSelectionContext parserState
+    (fun selectionTarget ->
       {
-        parserState with
-        currentStructuredFragmentDefinition =
-          Some
-            {
-              fragmentDefinitionBuilder with
-              builderFragmentSelectionTarget =
-                {
-                  fragmentDefinitionBuilder.builderFragmentSelectionTarget with
-                  builderCurrentSelectionBranch = Some selectionBranchBuilder;
-                };
-            };
-      }
-  | None -> (
-      match parserState.currentOperationDefinition with
-      | Some operationDefinitionBuilder ->
-          {
-            parserState with
-            currentOperationDefinition =
-              Some
-                {
-                  operationDefinitionBuilder with
-                  builderOperationSelectionTarget =
-                    {
-                      operationDefinitionBuilder.builderOperationSelectionTarget with
-                      builderCurrentSelectionBranch =
-                        Some selectionBranchBuilder;
-                    };
-                };
-          }
-      | None ->
-          raise
-            (Invalid_argument
-               (Printf.sprintf
-                  "Selections require an operation or fragment context.\n\n%s"
-                  CommandLineInvocationShared.usageText)))
+        selectionTarget with
+        builderCurrentSelectionBranch = Some selectionBranchBuilder;
+      })
 
 let withAddedRootSelectionExpression parserState selectionExpression =
-  match parserState.currentStructuredFragmentDefinition with
-  | Some fragmentDefinitionBuilder ->
+  mapCurrentSelectionTarget ~onMissing:missingSelectionContext parserState
+    (fun selectionTarget ->
       {
-        parserState with
-        currentStructuredFragmentDefinition =
-          Some
-            {
-              fragmentDefinitionBuilder with
-              builderFragmentSelectionTarget =
-                {
-                  fragmentDefinitionBuilder.builderFragmentSelectionTarget with
-                  builderRootSelectionExpressions =
-                    fragmentDefinitionBuilder.builderFragmentSelectionTarget
-                      .builderRootSelectionExpressions @ [ selectionExpression ];
-                };
-            };
-      }
-  | None -> (
-      match parserState.currentOperationDefinition with
-      | Some operationDefinitionBuilder ->
-          {
-            parserState with
-            currentOperationDefinition =
-              Some
-                {
-                  operationDefinitionBuilder with
-                  builderOperationSelectionTarget =
-                    {
-                      operationDefinitionBuilder.builderOperationSelectionTarget with
-                      builderRootSelectionExpressions =
-                        operationDefinitionBuilder
-                          .builderOperationSelectionTarget
-                          .builderRootSelectionExpressions
-                        @ [ selectionExpression ];
-                    };
-                };
-          }
-      | None ->
-          raise
-            (Invalid_argument
-               (Printf.sprintf
-                  "Selections require an operation or fragment context.\n\n%s"
-                  CommandLineInvocationShared.usageText)))
+        selectionTarget with
+        builderRootSelectionExpressions =
+          selectionTarget.builderRootSelectionExpressions
+          @ [ selectionExpression ];
+      })
 
 let withAddedCurrentTargetDirective parserState directiveText =
-  match parserState.currentStructuredFragmentDefinition with
-  | Some fragmentDefinitionBuilder ->
+  mapCurrentFragmentOrOperation ~onMissing:missingDirectiveContext parserState
+    ~mapFragment:(fun fragmentDefinitionBuilder ->
       {
-        parserState with
-        currentStructuredFragmentDefinition =
-          Some
-            {
-              fragmentDefinitionBuilder with
-              builderFragmentDirectiveTexts =
-                fragmentDefinitionBuilder.builderFragmentDirectiveTexts
-                @ [ directiveText ];
-            };
-      }
-  | None -> (
-      match parserState.currentOperationDefinition with
-      | Some operationDefinitionBuilder ->
-          {
-            parserState with
-            currentOperationDefinition =
-              Some
-                {
-                  operationDefinitionBuilder with
-                  builderOperationDirectiveTexts =
-                    operationDefinitionBuilder.builderOperationDirectiveTexts
-                    @ [ directiveText ];
-                };
-          }
-      | None ->
-          raise
-            (Invalid_argument
-               (Printf.sprintf
-                  "Directives require an operation or fragment context.\n\n%s"
-                  CommandLineInvocationShared.usageText)))
+        fragmentDefinitionBuilder with
+        builderFragmentDirectiveTexts =
+          fragmentDefinitionBuilder.builderFragmentDirectiveTexts
+          @ [ directiveText ];
+      })
+    ~mapOperation:(fun operationDefinitionBuilder ->
+      {
+        operationDefinitionBuilder with
+        builderOperationDirectiveTexts =
+          operationDefinitionBuilder.builderOperationDirectiveTexts
+          @ [ directiveText ];
+      })
 
 let startedOperationDefinition parserState operationType operationName =
   let finalizedParserState =
