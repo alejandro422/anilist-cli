@@ -84,7 +84,8 @@ let handleSelectionSet parserState token remainingTokens =
     CommandLineInvocationShared.valueOfOptionToken token remainingTokens
   in
   let updatedParserState =
-    match CommandLineInvocationBranch.currentSelectionBranchOfState parserState
+    match
+      CommandLineInvocationBranch.currentSelectionBranchOfState parserState
     with
     | Some selectionBranchBuilder ->
         CommandLineInvocationState.withUpdatedCurrentSelectionBranch parserState
@@ -100,8 +101,8 @@ let handleOperationName parserState token remainingTokens =
   let operationName, remainingTokens =
     CommandLineInvocationShared.valueOfOptionToken token remainingTokens
   in
-  ( withCurrentOperationOrRaise ~optionDescription:"--operation-name"
-      parserState (fun operationDefinitionBuilder ->
+  ( withCurrentOperationOrRaise ~optionDescription:"--operation-name" parserState
+      (fun operationDefinitionBuilder ->
         {
           operationDefinitionBuilder with
           builderOperationName = Some operationName;
@@ -151,7 +152,8 @@ let handleDirective parserState token remainingTokens =
     CommandLineInvocationShared.valueOfOptionToken token remainingTokens
   in
   let updatedParserState =
-    match CommandLineInvocationBranch.currentSelectionBranchOfState parserState
+    match
+      CommandLineInvocationBranch.currentSelectionBranchOfState parserState
     with
     | Some selectionBranchBuilder ->
         CommandLineInvocationState.withUpdatedCurrentSelectionBranch parserState
@@ -168,7 +170,8 @@ let handleAlias parserState token remainingTokens =
     CommandLineInvocationShared.valueOfOptionToken token remainingTokens
   in
   let updatedParserState =
-    match CommandLineInvocationBranch.currentSelectionBranchOfState parserState
+    match
+      CommandLineInvocationBranch.currentSelectionBranchOfState parserState
     with
     | Some selectionBranchBuilder ->
         CommandLineInvocationState.withUpdatedCurrentSelectionBranch parserState
@@ -203,7 +206,8 @@ let handleFieldArgument parserState token remainingTokens =
     CommandLineInvocationShared.optionPairOfToken token remainingTokens
   in
   let updatedParserState =
-    match CommandLineInvocationBranch.currentSelectionBranchOfState parserState
+    match
+      CommandLineInvocationBranch.currentSelectionBranchOfState parserState
     with
     | Some selectionBranchBuilder ->
         CommandLineInvocationState.withUpdatedCurrentSelectionBranch parserState
@@ -243,7 +247,8 @@ let optionHandlers =
   ]
 
 let handlePositionalToken parserState token remainingTokens =
-  match CommandLineInvocationBranch.currentSelectionBranchOfState parserState
+  match
+    CommandLineInvocationBranch.currentSelectionBranchOfState parserState
   with
   | Some selectionBranchBuilder
     when CommandLineInvocationBranch.currentDefaultSelectionPathPrefix
@@ -272,8 +277,8 @@ let handlePositionalToken parserState token remainingTokens =
       | None -> (
           match CommandLineInvocationShared.operationTypeOfToken token with
           | Some operationType ->
-              ( CommandLineInvocationState.startedOperationDefinition parserState
-                  operationType None,
+              ( CommandLineInvocationState.startedOperationDefinition
+                  parserState operationType None,
                 remainingTokens )
           | None ->
               ( CommandLineInvocationState.startedShorthandQueryOperation

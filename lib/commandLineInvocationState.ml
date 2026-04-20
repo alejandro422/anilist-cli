@@ -136,12 +136,10 @@ let finalizedCurrentOperationDefinition parserState =
   | None -> parserState
 
 let missingSelectionContext =
-  raiseMissingContext
-    "Selections require an operation or fragment context."
+  raiseMissingContext "Selections require an operation or fragment context."
 
 let missingDirectiveContext =
-  raiseMissingContext
-    "Directives require an operation or fragment context."
+  raiseMissingContext "Directives require an operation or fragment context."
 
 let withUpdatedCurrentSelectionBranch parserState selectionBranchBuilder =
   mapCurrentSelectionTarget ~onMissing:missingSelectionContext parserState

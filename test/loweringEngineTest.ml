@@ -101,7 +101,8 @@ let testExplicitOperationWithMultipleRootFields () =
              LoweringEngine.variableDefinitions = [ "$userName: String!" ];
              LoweringEngine.variableAssignments =
                [ ("userName", "string:fuwn") ];
-             LoweringEngine.operationDirectiveTexts = [ "cacheControl(maxAge: 60)" ];
+             LoweringEngine.operationDirectiveTexts =
+               [ "cacheControl(maxAge: 60)" ];
              LoweringEngine.rootSelectionExpressions = [ "viewer.id" ];
              LoweringEngine.selectionBranches =
                [
@@ -360,7 +361,8 @@ let testMultipleOperationDocumentLowering () =
              LoweringEngine.operationName = Some "Viewer";
              LoweringEngine.variableDefinitions = [];
              LoweringEngine.variableAssignments = [];
-             LoweringEngine.operationDirectiveTexts = [ "cacheControl(maxAge: 60)" ];
+             LoweringEngine.operationDirectiveTexts =
+               [ "cacheControl(maxAge: 60)" ];
              LoweringEngine.rootSelectionExpressions = [ "viewer.id" ];
              LoweringEngine.selectionBranches = [];
            }
@@ -452,7 +454,8 @@ let testOperationParsing () =
       assertEqual "1"
         (string_of_int
            (List.length
-              invocation.CommandLineInvocationTypes.structuredFragmentDefinitions))
+              invocation
+                .CommandLineInvocationTypes.structuredFragmentDefinitions))
   | Error message -> failwith message
 
 let testVariableAssignmentsPreserveGraphQlVariableNames () =
@@ -542,19 +545,21 @@ let testRelativeAndAbsoluteFieldPathParsing () =
         List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let secondSelectionBranch =
-        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.tl
-        |> List.hd
+        operationDefinition.CommandLineInvocationTypes.selectionBranches
+        |> List.tl |> List.hd
       in
       let thirdSelectionBranch =
-        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
-        |> List.hd
+        operationDefinition.CommandLineInvocationTypes.selectionBranches
+        |> List.rev |> List.hd
       in
       assertEqual "2"
         (string_of_int
            (List.length
-              secondSelectionBranch.CommandLineInvocationTypes.selectionPathSegments));
+              secondSelectionBranch
+                .CommandLineInvocationTypes.selectionPathSegments));
       match
-        List.hd thirdSelectionBranch.CommandLineInvocationTypes.selectionPathSegments
+        List.hd
+          thirdSelectionBranch.CommandLineInvocationTypes.selectionPathSegments
       with
       | CommandLineInvocationTypes.FieldSegment fieldSegment ->
           assertEqual "media" fieldSegment.CommandLineInvocationTypes.fieldName
@@ -608,13 +613,14 @@ let testInlineFragmentParsing () =
         List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let inlineFragmentBranch =
-        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
-        |> List.hd
+        operationDefinition.CommandLineInvocationTypes.selectionBranches
+        |> List.rev |> List.hd
       in
       assertEqual "2"
         (string_of_int
            (List.length
-              inlineFragmentBranch.CommandLineInvocationTypes.selectionPathSegments))
+              inlineFragmentBranch
+                .CommandLineInvocationTypes.selectionPathSegments))
   | Error message -> failwith message
 
 let testFragmentSpreadParsing () =
@@ -637,15 +643,16 @@ let testFragmentSpreadParsing () =
         List.hd invocation.CommandLineInvocationTypes.operationDefinitions
       in
       let fragmentSpreadBranch =
-        operationDefinition.CommandLineInvocationTypes.selectionBranches |> List.rev
-        |> List.hd
+        operationDefinition.CommandLineInvocationTypes.selectionBranches
+        |> List.rev |> List.hd
       in
       match
         List.rev
           fragmentSpreadBranch.CommandLineInvocationTypes.selectionPathSegments
         |> List.hd
       with
-      | CommandLineInvocationTypes.FragmentSpreadSegment fragmentSpreadSegment ->
+      | CommandLineInvocationTypes.FragmentSpreadSegment fragmentSpreadSegment
+        ->
           assertEqual "mediaCore"
             fragmentSpreadSegment.CommandLineInvocationTypes.fragmentSpreadName;
           assertEqual "1"
@@ -702,7 +709,8 @@ let testMultipleOperationParsing () =
   | Ok invocation ->
       assertEqual "2"
         (string_of_int
-           (List.length invocation.CommandLineInvocationTypes.operationDefinitions));
+           (List.length
+              invocation.CommandLineInvocationTypes.operationDefinitions));
       assertEqual "UserLookup"
         (Option.get invocation.CommandLineInvocationTypes.selectedOperationName)
   | Error message -> failwith message
@@ -722,14 +730,17 @@ let testSchemaCommandParsing () =
            (match schemaCommand.SchemaCommandTypes.requestedDirectiveName with
            | Some _ -> 1
            | None -> 0));
-      assertContainsSubstring "__schema" schemaCommand.SchemaCommandTypes.queryText;
+      assertContainsSubstring "__schema"
+        schemaCommand.SchemaCommandTypes.queryText;
       assertContainsSubstring "fragment FullType"
         schemaCommand.SchemaCommandTypes.queryText
   | Ok None -> failwith "Expected schema command"
   | Error message -> failwith message
 
 let testSchemaTypeCommandParsing () =
-  match SchemaArgumentParser.invocationOfArguments [ "schema"; "--type"; "Media" ] with
+  match
+    SchemaArgumentParser.invocationOfArguments [ "schema"; "--type"; "Media" ]
+  with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionTypeQuery"
         (Option.get schemaCommand.SchemaCommandTypes.operationName);
@@ -748,12 +759,14 @@ let testSchemaTypeCommandParsing () =
 
 let testSchemaDirectiveCommandParsing () =
   match
-    SchemaArgumentParser.invocationOfArguments [ "schema"; "--directive"; "include" ]
+    SchemaArgumentParser.invocationOfArguments
+      [ "schema"; "--directive"; "include" ]
   with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionDirectiveQuery"
         (Option.get schemaCommand.SchemaCommandTypes.operationName);
-      assertContainsSubstring "directives" schemaCommand.SchemaCommandTypes.queryText;
+      assertContainsSubstring "directives"
+        schemaCommand.SchemaCommandTypes.queryText;
       assertEqual "include"
         (Option.get schemaCommand.SchemaCommandTypes.requestedDirectiveName);
       assertEqual "0"
@@ -765,14 +778,17 @@ let testSchemaDirectiveCommandParsing () =
   | Error message -> failwith message
 
 let testSchemaEqualsOptionParsing () =
-  (match SchemaArgumentParser.invocationOfArguments [ "schema"; "--type=Media" ] with
+  (match
+     SchemaArgumentParser.invocationOfArguments [ "schema"; "--type=Media" ]
+   with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionTypeQuery"
         (Option.get schemaCommand.SchemaCommandTypes.operationName)
   | Ok None -> failwith "Expected schema type command"
   | Error message -> failwith message);
   match
-    SchemaArgumentParser.invocationOfArguments [ "schema"; "--directive=include" ]
+    SchemaArgumentParser.invocationOfArguments
+      [ "schema"; "--directive=include" ]
   with
   | Ok (Some schemaCommand) ->
       assertEqual "IntrospectionDirectiveQuery"
@@ -836,24 +852,27 @@ let testRequestHeaderExtractionRejectsMissingHeaderValue () =
       assertContainsSubstring "Missing value for option --header." message
 
 let testCommandLineHelpDetection () =
-  if not (CommandLineInvocationShared.helpRequestedOfArguments [ "--help" ]) then
-    failwith "Expected top-level help detection";
-  if not (CommandLineInvocationShared.helpRequestedOfArguments [ "query"; "--help" ])
+  if not (CommandLineInvocationShared.helpRequestedOfArguments [ "--help" ])
+  then failwith "Expected top-level help detection";
+  if
+    not
+      (CommandLineInvocationShared.helpRequestedOfArguments
+         [ "query"; "--help" ])
   then failwith "Expected trailing flag help detection";
-  if CommandLineInvocationShared.helpRequestedOfArguments [ "--bogus"; "help" ] then
-    failwith "Unexpected bare help token detection";
+  if CommandLineInvocationShared.helpRequestedOfArguments [ "--bogus"; "help" ]
+  then failwith "Unexpected bare help token detection";
   if
     CommandLineInvocationShared.helpRequestedOfArguments
       [ "query"; "--help"; "extra" ]
   then failwith "Unexpected non-trailing help detection"
 
 let testSchemaHelpDetection () =
-  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "--help" ]) then
-    failwith "Expected schema help detection";
-  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "help" ]) then
-    failwith "Expected schema bare help detection";
-  if SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "nope"; "help" ] then
-    failwith "Unexpected schema malformed help detection"
+  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "--help" ])
+  then failwith "Expected schema help detection";
+  if not (SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "help" ])
+  then failwith "Expected schema bare help detection";
+  if SchemaArgumentParser.helpRequestedOfArguments [ "schema"; "nope"; "help" ]
+  then failwith "Unexpected schema malformed help detection"
 
 let () =
   testSingleFieldSelectionShorthand ();

@@ -137,9 +137,13 @@ let rec fieldOfPathSegments = function
 
 let scopeAndFieldPathOfCliField fieldPath =
   if StringPrefix.valueHasPrefix ~prefix:rootFieldPathPrefix fieldPath then
-    (`Root, StringPrefix.valueWithoutPrefix ~prefix:rootFieldPathPrefix fieldPath)
-  else if StringPrefix.valueHasPrefix ~prefix:rootSelectionPathPrefix fieldPath then
-    (`Root, StringPrefix.valueWithoutPrefix ~prefix:rootSelectionPathPrefix fieldPath)
+    ( `Root,
+      StringPrefix.valueWithoutPrefix ~prefix:rootFieldPathPrefix fieldPath )
+  else if StringPrefix.valueHasPrefix ~prefix:rootSelectionPathPrefix fieldPath
+  then
+    ( `Root,
+      StringPrefix.valueWithoutPrefix ~prefix:rootSelectionPathPrefix fieldPath
+    )
   else (`Relative, fieldPath)
 
 let selectionOfInlineFragmentPath ~capitalizeRootFieldNames inlineFragmentPath =
@@ -169,9 +173,11 @@ let selectionOfInlineFragmentPath ~capitalizeRootFieldNames inlineFragmentPath =
 let selectionsOfScopedPaths ~capitalizeRootFieldNames scopedPaths =
   scopedPaths |> List.map snd
   |> List.map (fun scopedPath ->
-      if StringPrefix.valueHasPrefix ~prefix:fragmentSpreadPrefix scopedPath then
+      if StringPrefix.valueHasPrefix ~prefix:fragmentSpreadPrefix scopedPath
+      then
         let spreadTarget =
-          StringPrefix.valueWithoutPrefix ~prefix:fragmentSpreadPrefix scopedPath
+          StringPrefix.valueWithoutPrefix ~prefix:fragmentSpreadPrefix
+            scopedPath
         in
         if StringPrefix.valueHasPrefix ~prefix:"on:" spreadTarget then
           let inlineFragmentPath =

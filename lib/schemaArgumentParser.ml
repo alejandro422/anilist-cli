@@ -68,7 +68,8 @@ let parseArguments arguments =
           setOptionOrConflictError "type" value parsedArguments.typeName
         in
         parse { parsedArguments with typeName = updatedValue } rest
-    | argument :: rest when String.starts_with ~prefix:"--directive=" argument ->
+    | argument :: rest when String.starts_with ~prefix:"--directive=" argument
+      ->
         let value = String.sub argument 12 (String.length argument - 12) in
         let* updatedValue =
           setOptionOrConflictError "directive" value

@@ -10,12 +10,14 @@ type fieldSegment = CommandLineInvocationTypes.fieldSegment = {
   fieldDirectiveTexts : string list;
 }
 
-type inlineFragmentSegment = CommandLineInvocationTypes.inlineFragmentSegment = {
+type inlineFragmentSegment =
+      CommandLineInvocationTypes.inlineFragmentSegment = {
   inlineFragmentTypeCondition : string;
   inlineFragmentDirectiveTexts : string list;
 }
 
-type fragmentSpreadSegment = CommandLineInvocationTypes.fragmentSpreadSegment = {
+type fragmentSpreadSegment =
+      CommandLineInvocationTypes.fragmentSpreadSegment = {
   fragmentSpreadName : string;
   fragmentSpreadDirectiveTexts : string list;
 }
@@ -41,7 +43,7 @@ type operationDefinition = CommandLineInvocationTypes.operationDefinition = {
 }
 
 type structuredFragmentDefinition =
-  CommandLineInvocationTypes.structuredFragmentDefinition = {
+      CommandLineInvocationTypes.structuredFragmentDefinition = {
   fragmentName : string;
   fragmentTypeCondition : string;
   fragmentDirectiveTexts : string list;
@@ -90,8 +92,8 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
   | [] ->
       raise (Invalid_argument "Expected at least one selection path segment")
   | FieldSegment
-      ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
-        : fieldSegment)
+      ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts } :
+        fieldSegment)
     :: remainingSelectionPathSegments ->
       GraphQlSelection.field
         (GraphQlSelection.makeField ?alias:fieldAlias
@@ -101,8 +103,8 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
            ~selectionSet:(lowerTail remainingSelectionPathSegments)
            ())
   | InlineFragmentSegment
-      ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
-        : inlineFragmentSegment)
+      ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts } :
+        inlineFragmentSegment)
     :: remainingSelectionPathSegments ->
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
@@ -111,8 +113,8 @@ let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
            ~selectionSet:(lowerTail remainingSelectionPathSegments)
            ())
   | FragmentSpreadSegment
-      ({ fragmentSpreadName; fragmentSpreadDirectiveTexts }
-        : fragmentSpreadSegment)
+      ({ fragmentSpreadName; fragmentSpreadDirectiveTexts } :
+        fragmentSpreadSegment)
     :: remainingSelectionPathSegments ->
       if remainingSelectionPathSegments <> [] then
         raise
