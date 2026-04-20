@@ -188,11 +188,7 @@ let handleFragmentDefinition parserState token remainingTokens =
     CommandLineInvocationShared.valueOfOptionToken token remainingTokens
   in
   let finalizedParserState =
-    parserState
-    |> CommandLineInvocationState.finalizedCurrentSelectionBranch
-    |> CommandLineInvocationState
-       .finalizedCurrentStructuredFragmentDefinition
-    |> CommandLineInvocationState.finalizedCurrentOperationDefinition
+    CommandLineInvocationState.finalizedAllPending parserState
   in
   ( {
       finalizedParserState with

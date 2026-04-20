@@ -78,69 +78,49 @@ let graphQlTypeCondition typeCondition =
 
 let rec lowerSelectionPathSegments ~isTargetRoot selectionPathSegments
     selectionSet =
+  let lowerTail = function
+    | [] -> selectionSet
+    | remainingSelectionPathSegments ->
+        [
+          lowerSelectionPathSegments ~isTargetRoot:false
+            remainingSelectionPathSegments selectionSet;
+        ]
+  in
   match selectionPathSegments with
   | [] ->
       raise (Invalid_argument "Expected at least one selection path segment")
-  | [
-   FieldSegment
-     ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
-       : fieldSegment);
-  ] ->
-      GraphQlSelection.field
-        (GraphQlSelection.makeField ?alias:fieldAlias
-           ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
-           ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
-           ~directives:fieldDirectiveTexts
-           ~selectionSet ())
-  | [
-   InlineFragmentSegment
-     ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
-       : inlineFragmentSegment);
-  ] ->
-      GraphQlSelection.inlineFragment
-        (GraphQlSelection.makeInlineFragment
-           ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
-           ~directives:inlineFragmentDirectiveTexts
-           ~selectionSet ())
-  | [
-   FragmentSpreadSegment
-     ({ fragmentSpreadName; fragmentSpreadDirectiveTexts }
-       : fragmentSpreadSegment);
-  ] ->
-      GraphQlSelection.fragmentSpread
-        (GraphQlSelection.makeFragmentSpread ~name:fragmentSpreadName
-           ~directives:fragmentSpreadDirectiveTexts
-           ())
   | FieldSegment
       ({ fieldName; fieldAlias; fieldArgumentPairs; fieldDirectiveTexts }
         : fieldSegment)
     :: remainingSelectionPathSegments ->
-      let childSelection =
-        lowerSelectionPathSegments ~isTargetRoot:false
-          remainingSelectionPathSegments selectionSet
-      in
       GraphQlSelection.field
         (GraphQlSelection.makeField ?alias:fieldAlias
            ~name:(graphQlFieldNameOfSegment ~isTargetRoot fieldName)
            ~arguments:(graphQlArgumentsOfOptionPairs fieldArgumentPairs)
            ~directives:fieldDirectiveTexts
-           ~selectionSet:[ childSelection ] ())
+           ~selectionSet:(lowerTail remainingSelectionPathSegments)
+           ())
   | InlineFragmentSegment
       ({ inlineFragmentTypeCondition; inlineFragmentDirectiveTexts }
         : inlineFragmentSegment)
     :: remainingSelectionPathSegments ->
-      let childSelection =
-        lowerSelectionPathSegments ~isTargetRoot:false
-          remainingSelectionPathSegments selectionSet
-      in
       GraphQlSelection.inlineFragment
         (GraphQlSelection.makeInlineFragment
            ~typeCondition:(graphQlTypeCondition inlineFragmentTypeCondition)
            ~directives:inlineFragmentDirectiveTexts
-           ~selectionSet:[ childSelection ] ())
-  | FragmentSpreadSegment _ :: _ ->
-      raise
-        (Invalid_argument "Fragment spreads cannot contain child selections")
+           ~selectionSet:(lowerTail remainingSelectionPathSegments)
+           ())
+  | FragmentSpreadSegment
+      ({ fragmentSpreadName; fragmentSpreadDirectiveTexts }
+        : fragmentSpreadSegment)
+    :: remainingSelectionPathSegments ->
+      if remainingSelectionPathSegments <> [] then
+        raise
+          (Invalid_argument "Fragment spreads cannot contain child selections")
+      else
+        GraphQlSelection.fragmentSpread
+          (GraphQlSelection.makeFragmentSpread ~name:fragmentSpreadName
+             ~directives:fragmentSpreadDirectiveTexts ())
 
 let lowerSelectionBranch ~capitalizeRootFieldNames ~isTargetRoot selectionBranch
     =

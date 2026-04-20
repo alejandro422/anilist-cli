@@ -178,12 +178,13 @@ let withAddedCurrentTargetDirective parserState directiveText =
           @ [ directiveText ];
       })
 
+let finalizedAllPending parserState =
+  parserState |> finalizedCurrentSelectionBranch
+  |> finalizedCurrentStructuredFragmentDefinition
+  |> finalizedCurrentOperationDefinition
+
 let startedOperationDefinition parserState operationType operationName =
-  let finalizedParserState =
-    parserState |> finalizedCurrentSelectionBranch
-    |> finalizedCurrentStructuredFragmentDefinition
-    |> finalizedCurrentOperationDefinition
-  in
+  let finalizedParserState = finalizedAllPending parserState in
   {
     finalizedParserState with
     currentOperationDefinition =
@@ -204,11 +205,7 @@ let startedShorthandQueryOperation parserState firstFieldToken =
     CommandLineInvocationBranch.makeSelectionBranchBuilderFromFieldPath
       firstFieldToken
   in
-  let finalizedParserState =
-    parserState |> finalizedCurrentSelectionBranch
-    |> finalizedCurrentStructuredFragmentDefinition
-    |> finalizedCurrentOperationDefinition
-  in
+  let finalizedParserState = finalizedAllPending parserState in
   {
     finalizedParserState with
     currentOperationDefinition =
@@ -233,11 +230,7 @@ let startedShorthandQueryOperation parserState firstFieldToken =
 
 let startedStructuredFragmentDefinition parserState fragmentName
     fragmentTypeCondition =
-  let finalizedParserState =
-    parserState |> finalizedCurrentSelectionBranch
-    |> finalizedCurrentStructuredFragmentDefinition
-    |> finalizedCurrentOperationDefinition
-  in
+  let finalizedParserState = finalizedAllPending parserState in
   {
     finalizedParserState with
     currentStructuredFragmentDefinition =
@@ -276,11 +269,7 @@ let initialParserState =
   }
 
 let currentInvocationOfState parserState =
-  let finalizedParserState =
-    parserState |> finalizedCurrentSelectionBranch
-    |> finalizedCurrentStructuredFragmentDefinition
-    |> finalizedCurrentOperationDefinition
-  in
+  let finalizedParserState = finalizedAllPending parserState in
   {
     operationDefinitions = finalizedParserState.finalizedOperationDefinitions;
     selectedOperationName = finalizedParserState.requestedOperationName;

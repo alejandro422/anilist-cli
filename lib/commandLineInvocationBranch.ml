@@ -215,47 +215,53 @@ let ensureSelectionPathCanAcceptChildren selectionPathSegments =
   | FieldSegment _ :: _ | InlineFragmentSegment _ :: _ | [] ->
       selectionPathSegments
 
-let parentSegmentsAndBareText parserState ~currentBranchRequiredMessage pathText
-    =
-  let currentSelectionBranch = currentSelectionBranchOfState parserState in
-  let currentBranchSegments () =
-    match currentSelectionBranch with
-    | Some selectionBranchBuilder ->
-        orderedSelectionPathSegmentsOfBranchBuilder selectionBranchBuilder
-        |> ensureSelectionPathCanAcceptChildren
-    | None ->
-        raise
-          (Invalid_argument
-             (Printf.sprintf "%s\n\n%s" currentBranchRequiredMessage
-                CommandLineInvocationShared.usageText))
-  in
+let classifiedBranchPath pathText =
   if
     StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.currentBranchPathPrefix pathText
   then
-    ( currentBranchSegments (),
+    ( `Relative,
       StringPrefix.valueWithoutPrefix
         ~prefix:CommandLineInvocationShared.currentBranchPathPrefix pathText )
   else if
     StringPrefix.valueHasPrefix
       ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix pathText
   then
-    ( [],
+    ( `Absolute,
       StringPrefix.valueWithoutPrefix
         ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix pathText )
-  else
-    ( (match currentSelectionBranch with
-      | Some selectionBranchBuilder ->
-          orderedSelectionPathSegmentsOfBranchBuilder selectionBranchBuilder
-          |> ensureSelectionPathCanAcceptChildren
-      | None -> currentDefaultSelectionPathPrefix parserState),
-      pathText )
+  else (`Default, pathText)
+
+let currentBranchSegmentsOrRaise parserState ~requiredMessage =
+  match currentSelectionBranchOfState parserState with
+  | Some selectionBranchBuilder ->
+      orderedSelectionPathSegmentsOfBranchBuilder selectionBranchBuilder
+      |> ensureSelectionPathCanAcceptChildren
+  | None ->
+      raise
+        (Invalid_argument
+           (Printf.sprintf "%s\n\n%s" requiredMessage
+              CommandLineInvocationShared.usageText))
+
+let parentSegmentsAndBareText parserState ~currentBranchRequiredMessage pathText
+    =
+  match classifiedBranchPath pathText with
+  | `Relative, bareText ->
+      ( currentBranchSegmentsOrRaise parserState
+          ~requiredMessage:currentBranchRequiredMessage,
+        bareText )
+  | `Absolute, bareText -> ([], bareText)
+  | `Default, bareText ->
+      let parentSegments =
+        match currentSelectionBranchOfState parserState with
+        | Some selectionBranchBuilder ->
+            orderedSelectionPathSegmentsOfBranchBuilder selectionBranchBuilder
+            |> ensureSelectionPathCanAcceptChildren
+        | None -> currentDefaultSelectionPathPrefix parserState
+      in
+      (parentSegments, bareText)
 
 let resolvedSelectionPathSegmentsOfFieldPath parserState fieldPath =
-  let currentSelectionBranch = currentSelectionBranchOfState parserState in
-  let defaultSelectionPathPrefix =
-    currentDefaultSelectionPathPrefix parserState
-  in
   let nonemptyFieldSegments path =
     let segments = fieldSegmentsOfPath path in
     if segments = [] then
@@ -265,38 +271,16 @@ let resolvedSelectionPathSegmentsOfFieldPath parserState fieldPath =
               CommandLineInvocationShared.usageText))
     else segments
   in
-  if
-    StringPrefix.valueHasPrefix
-      ~prefix:CommandLineInvocationShared.currentBranchPathPrefix fieldPath
-  then
-    let relativeFieldPath =
-      StringPrefix.valueWithoutPrefix
-        ~prefix:CommandLineInvocationShared.currentBranchPathPrefix fieldPath
-    in
-    let relativeSelectionPathSegments =
-      nonemptyFieldSegments relativeFieldPath
-    in
-    (match currentSelectionBranch with
-      | Some selectionBranchBuilder ->
-          orderedSelectionPathSegmentsOfBranchBuilder selectionBranchBuilder
-          |> ensureSelectionPathCanAcceptChildren
-      | None ->
-          raise
-            (Invalid_argument
-               (Printf.sprintf
-                  "Relative --field paths require an existing selection \
-                   branch.\n\n\
-                   %s"
-                  CommandLineInvocationShared.usageText)))
-    @ relativeSelectionPathSegments
-  else if
-    StringPrefix.valueHasPrefix
-      ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix fieldPath
-  then
-    nonemptyFieldSegments
-      (StringPrefix.valueWithoutPrefix
-         ~prefix:CommandLineInvocationShared.absoluteBranchPathPrefix fieldPath)
-  else defaultSelectionPathPrefix @ nonemptyFieldSegments fieldPath
+  match classifiedBranchPath fieldPath with
+  | `Relative, bareFieldPath ->
+      currentBranchSegmentsOrRaise parserState
+        ~requiredMessage:
+          "Relative --field paths require an existing selection branch."
+      @ nonemptyFieldSegments bareFieldPath
+  | `Absolute, bareFieldPath -> nonemptyFieldSegments bareFieldPath
+  | `Default, bareFieldPath ->
+      currentDefaultSelectionPathPrefix parserState
+      @ nonemptyFieldSegments bareFieldPath
 
 let resolvedSelectionPathSegmentsOfInlineFragment parserState
     inlineFragmentTypeConditionText =
