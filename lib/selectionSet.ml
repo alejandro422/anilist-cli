@@ -33,33 +33,15 @@ let pathSegmentsOfCliField ~capitalizeRootFieldNames fieldPath =
         ~capitalizeFieldName:(capitalizeRootFieldNames && index = 0)
         fieldName)
 
-let sameDirective left right =
-  GraphQlSelection.renderDirectiveText left
-  = GraphQlSelection.renderDirectiveText right
-
-let sameArgument left right =
-  left.CliArgument.name = right.CliArgument.name
-  && left.CliArgument.value = right.CliArgument.value
-
-let rec sameArguments left right =
-  match (left, right) with
-  | [], [] -> true
-  | leftHead :: leftTail, rightHead :: rightTail ->
-      sameArgument leftHead rightHead && sameArguments leftTail rightTail
-  | _ -> false
-
-let rec sameDirectives left right =
-  match (left, right) with
-  | [], [] -> true
-  | leftHead :: leftTail, rightHead :: rightTail ->
-      sameDirective leftHead rightHead && sameDirectives leftTail rightTail
-  | _ -> false
+let sameDirectives left right =
+  List.map GraphQlSelection.renderDirectiveText left
+  = List.map GraphQlSelection.renderDirectiveText right
 
 let sameFieldIdentity left right =
   left.GraphQlSelection.fieldAlias = right.GraphQlSelection.fieldAlias
   && left.GraphQlSelection.fieldName = right.GraphQlSelection.fieldName
-  && sameArguments left.GraphQlSelection.fieldArguments
-       right.GraphQlSelection.fieldArguments
+  && left.GraphQlSelection.fieldArguments
+     = right.GraphQlSelection.fieldArguments
   && sameDirectives left.GraphQlSelection.fieldDirectives
        right.GraphQlSelection.fieldDirectives
 

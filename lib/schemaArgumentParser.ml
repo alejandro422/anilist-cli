@@ -22,21 +22,30 @@ let helpRequestedOfArguments = function
   | [ "schema"; "--help" ] | [ "schema"; "help" ] -> true
   | _ -> false
 
-let parseArguments arguments =
-  let valueOfOption optionName optionValue =
-    if String.starts_with ~prefix:"--" optionValue then
+let valueOrMissingValueError optionName optionValue =
+  if String.starts_with ~prefix:"--" optionValue then
+    Error
+      (Printf.sprintf "Schema --%s requires a value.\n\n%s" optionName usageText)
+  else Ok optionValue
+
+let setOptionOrConflictError optionName optionValue currentValue =
+  match currentValue with
+  | None -> Ok (Some optionValue)
+  | Some _ ->
       Error
-        (Printf.sprintf "Schema --%s requires a value.\n\n%s" optionName
-           usageText)
-    else Ok optionValue
-  in
-  let setOption optionName optionValue currentValue =
-    match currentValue with
-    | None -> Ok (Some optionValue)
-    | Some _ ->
-        Error
-          (Printf.sprintf "Schema command accepts at most one --%s option."
-             optionName)
+        (Printf.sprintf "Schema command accepts at most one --%s option."
+           optionName)
+
+let ( let* ) = Result.bind
+
+let parseArguments arguments =
+  let applyOption optionName optionValue currentValue updateParsed remaining
+      parse parsedArguments =
+    let* checkedValue = valueOrMissingValueError optionName optionValue in
+    let* updatedValue =
+      setOptionOrConflictError optionName checkedValue currentValue
+    in
+    parse (updateParsed parsedArguments updatedValue) remaining
   in
   let rec parse parsedArguments = function
     | [] -> Ok parsedArguments
@@ -45,75 +54,58 @@ let parseArguments arguments =
     | "--directive" :: [] ->
         Error
           (Printf.sprintf "Schema --directive requires a value.\n\n%s" usageText)
-    | "--type" :: typeName :: remainingArguments -> (
-        match valueOfOption "type" typeName with
-        | Error _ as error -> error
-        | Ok typeName -> (
-            match setOption "type" typeName parsedArguments.typeName with
-            | Ok typeName ->
-                parse { parsedArguments with typeName } remainingArguments
-            | Error _ as error -> error))
-    | "--directive" :: directiveName :: remainingArguments -> (
-        match valueOfOption "directive" directiveName with
-        | Error _ as error -> error
-        | Ok directiveName -> (
-            match
-              setOption "directive" directiveName parsedArguments.directiveName
-            with
-            | Ok directiveName ->
-                parse { parsedArguments with directiveName } remainingArguments
-            | Error _ as error -> error))
-    | argument :: remainingArguments
-      when String.starts_with ~prefix:"--type=" argument -> (
-        let typeName = String.sub argument 7 (String.length argument - 7) in
-        match setOption "type" typeName parsedArguments.typeName with
-        | Ok typeName ->
-            parse { parsedArguments with typeName } remainingArguments
-        | Error _ as error -> error)
-    | argument :: remainingArguments
-      when String.starts_with ~prefix:"--directive=" argument -> (
-        let directiveName =
-          String.sub argument 12 (String.length argument - 12)
+    | "--type" :: value :: rest ->
+        applyOption "type" value parsedArguments.typeName
+          (fun parsed typeName -> { parsed with typeName })
+          rest parse parsedArguments
+    | "--directive" :: value :: rest ->
+        applyOption "directive" value parsedArguments.directiveName
+          (fun parsed directiveName -> { parsed with directiveName })
+          rest parse parsedArguments
+    | argument :: rest when String.starts_with ~prefix:"--type=" argument ->
+        let value = String.sub argument 7 (String.length argument - 7) in
+        let* updatedValue =
+          setOptionOrConflictError "type" value parsedArguments.typeName
         in
-        match
-          setOption "directive" directiveName parsedArguments.directiveName
-        with
-        | Ok directiveName ->
-            parse { parsedArguments with directiveName } remainingArguments
-        | Error _ as error -> error)
+        parse { parsedArguments with typeName = updatedValue } rest
+    | argument :: rest when String.starts_with ~prefix:"--directive=" argument ->
+        let value = String.sub argument 12 (String.length argument - 12) in
+        let* updatedValue =
+          setOptionOrConflictError "directive" value
+            parsedArguments.directiveName
+        in
+        parse { parsedArguments with directiveName = updatedValue } rest
     | argument :: _ ->
         Error
           (Printf.sprintf "Invalid schema argument: %s\n\n%s" argument usageText)
   in
   parse { typeName = None; directiveName = None } arguments
 
-let invocationOfArguments arguments =
-  match arguments with
+let commandOfParsedArguments = function
+  | { typeName = Some _; directiveName = Some _ } ->
+      Error
+        (Printf.sprintf
+           "Schema command accepts only one of --type or --directive.\n\n%s"
+           usageText)
+  | { typeName = Some name; directiveName = None } when name <> "" ->
+      Ok (Some (SchemaCommandTypes.typeCommand name))
+  | { typeName = None; directiveName = Some name } when name <> "" ->
+      Ok (Some (SchemaCommandTypes.directiveCommand name))
+  | { typeName = Some _; directiveName = None } ->
+      Error
+        (Printf.sprintf "Schema --type requires a non-empty type name.\n\n%s"
+           usageText)
+  | { typeName = None; directiveName = Some _ } ->
+      Error
+        (Printf.sprintf
+           "Schema --directive requires a non-empty directive name.\n\n%s"
+           usageText)
+  | { typeName = None; directiveName = None } ->
+      Error (Printf.sprintf "Invalid schema command.\n\n%s" usageText)
+
+let invocationOfArguments = function
   | "schema" :: [] -> Ok (Some SchemaCommandTypes.fullSchemaCommand)
   | "schema" :: [ "--help" ] | "schema" :: [ "help" ] -> Error usageText
-  | "schema" :: schemaArguments -> (
-      match parseArguments schemaArguments with
-      | Error _ as error -> error
-      | Ok { typeName = Some _; directiveName = Some _ } ->
-          Error
-            (Printf.sprintf
-               "Schema command accepts only one of --type or --directive.\n\n%s"
-               usageText)
-      | Ok { typeName = Some typeName; directiveName = None }
-        when typeName <> "" ->
-          Ok (Some (SchemaCommandTypes.typeCommand typeName))
-      | Ok { typeName = None; directiveName = Some directiveName }
-        when directiveName <> "" ->
-          Ok (Some (SchemaCommandTypes.directiveCommand directiveName))
-      | Ok { typeName = Some _; directiveName = None } ->
-          Error
-            (Printf.sprintf
-               "Schema --type requires a non-empty type name.\n\n%s" usageText)
-      | Ok { typeName = None; directiveName = Some _ } ->
-          Error
-            (Printf.sprintf
-               "Schema --directive requires a non-empty directive name.\n\n%s"
-               usageText)
-      | Ok { typeName = None; directiveName = None } ->
-          Error (Printf.sprintf "Invalid schema command.\n\n%s" usageText))
+  | "schema" :: schemaArguments ->
+      Result.bind (parseArguments schemaArguments) commandOfParsedArguments
   | _ -> Ok None

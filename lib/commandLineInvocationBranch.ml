@@ -75,29 +75,6 @@ let withUpdatedFieldAlias fieldSegment fieldAlias =
     fieldAlias = Some (CommandLineInvocationShared.normalizedAlias fieldAlias);
   }
 
-let withAddedFieldDirective fieldSegment fieldDirectiveText =
-  {
-    fieldSegment with
-    fieldDirectiveTexts =
-      fieldSegment.fieldDirectiveTexts @ [ fieldDirectiveText ];
-  }
-
-let withAddedInlineFragmentDirective inlineFragmentSegment fieldDirectiveText =
-  {
-    inlineFragmentSegment with
-    inlineFragmentDirectiveTexts =
-      inlineFragmentSegment.inlineFragmentDirectiveTexts
-      @ [ fieldDirectiveText ];
-  }
-
-let withAddedFragmentSpreadDirective fragmentSpreadSegment fieldDirectiveText =
-  {
-    fragmentSpreadSegment with
-    fragmentSpreadDirectiveTexts =
-      fragmentSpreadSegment.fragmentSpreadDirectiveTexts
-      @ [ fieldDirectiveText ];
-  }
-
 let withAddedBranchSelectionExpression selectionBranchBuilder
     selectionExpression =
   if branchBuilderEndsInFragmentSpread selectionBranchBuilder then
@@ -174,30 +151,37 @@ let withUpdatedBranchFieldAlias selectionBranchBuilder fieldAlias =
                %s"
               CommandLineInvocationShared.usageText))
 
-let withAddedBranchDirective selectionBranchBuilder fieldDirectiveText =
-  match selectionBranchBuilder.builderCurrentSelectionPathSegment with
-  | FieldSegment fieldSegment ->
-      {
-        selectionBranchBuilder with
-        builderCurrentSelectionPathSegment =
-          FieldSegment (withAddedFieldDirective fieldSegment fieldDirectiveText);
-      }
-  | InlineFragmentSegment inlineFragmentSegment ->
-      {
-        selectionBranchBuilder with
-        builderCurrentSelectionPathSegment =
-          InlineFragmentSegment
-            (withAddedInlineFragmentDirective inlineFragmentSegment
-               fieldDirectiveText);
-      }
-  | FragmentSpreadSegment fragmentSpreadSegment ->
-      {
-        selectionBranchBuilder with
-        builderCurrentSelectionPathSegment =
-          FragmentSpreadSegment
-            (withAddedFragmentSpreadDirective fragmentSpreadSegment
-               fieldDirectiveText);
-      }
+let withAddedBranchDirective selectionBranchBuilder directiveText =
+  let updatedCurrentSegment =
+    match selectionBranchBuilder.builderCurrentSelectionPathSegment with
+    | FieldSegment fieldSegment ->
+        FieldSegment
+          {
+            fieldSegment with
+            fieldDirectiveTexts =
+              fieldSegment.fieldDirectiveTexts @ [ directiveText ];
+          }
+    | InlineFragmentSegment inlineFragmentSegment ->
+        InlineFragmentSegment
+          {
+            inlineFragmentSegment with
+            inlineFragmentDirectiveTexts =
+              inlineFragmentSegment.inlineFragmentDirectiveTexts
+              @ [ directiveText ];
+          }
+    | FragmentSpreadSegment fragmentSpreadSegment ->
+        FragmentSpreadSegment
+          {
+            fragmentSpreadSegment with
+            fragmentSpreadDirectiveTexts =
+              fragmentSpreadSegment.fragmentSpreadDirectiveTexts
+              @ [ directiveText ];
+          }
+  in
+  {
+    selectionBranchBuilder with
+    builderCurrentSelectionPathSegment = updatedCurrentSegment;
+  }
 
 let currentSelectionBranchOfState parserState =
   match parserState.currentStructuredFragmentDefinition with
