@@ -31,4 +31,4 @@
   stringPrefix)
  (libraries cohttp-lwt-unix lwt uri yojson)
  (flags
-  (:standard -warn-error +a)))
+  (:standard -warn-error +a -w -70)))
